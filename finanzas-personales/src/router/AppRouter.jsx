@@ -6,6 +6,11 @@ import Work from '../pages/Work';
 import NotFound from '../pages/NotFound';
 import MainLayout from '../layouts/MainLayout';
 import { useAuth } from '../context/AuthContext';
+import Add from '../pages/Add';
+import History from '../pages/History';
+import Report from '../pages/Report';
+import Goals from '../pages/Goals';
+import Settings from '../pages/Settings';
 
 const PrivateRoute = ({ children }) => {
   const { user } = useAuth();
@@ -50,6 +55,46 @@ const AppRouter = () => {
           element={
             <PrivateRoute>
               <Work />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/add"
+          element={
+            <PrivateRoute>
+              <Add />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/history"
+          element={
+            <PrivateRoute>
+              <History />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/report"
+          element={
+            <PrivateRoute>
+              <Report />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/goals"
+          element={
+            <PrivateRoute>
+              <Goals />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <PrivateRoute>
+              <Settings />
             </PrivateRoute>
           }
         />
