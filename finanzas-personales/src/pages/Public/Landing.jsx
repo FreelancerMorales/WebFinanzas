@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { FaChartPie, FaPiggyBank, FaCalendarAlt } from 'react-icons/fa';
-import Header from '../../components/Header';
+import Header from '../../components/static/Header';
 
 const Landing = () => {
   return (

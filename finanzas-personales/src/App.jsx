@@ -1,11 +1,11 @@
 import { BrowserRouter } from 'react-router-dom';
-import Alert from './components/Alert';
-import Loader from './components/Loader';
 import ModalConfirm from './components/ModalConfirm';
 import RouteLoader from './components/RouteLoader';
 import { AuthProvider } from './context/AuthContext';
 import { UIProvider } from './context/UIContext';
 import AppRouter from './router/AppRouter';
+import Loader from './components/static/Loader';
+import Alert from './components/Alert';
 
 function App() {
   return (

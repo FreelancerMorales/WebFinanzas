@@ -1,4 +1,4 @@
-import { useUI } from '../context/UIContext';
+import { useUI } from '../../context/UIContext';
 
 const Loader = () => {
   const { loading } = useUI();
