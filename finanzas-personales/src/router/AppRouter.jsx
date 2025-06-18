@@ -1,16 +1,16 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Login from '../pages/Login';
-import Register from '../pages/Register';
-import Home from '../pages/Home';
-import Work from '../pages/Work';
-import NotFound from '../pages/NotFound';
+import Login from '../pages/Public/Login';
+import Register from '../pages/Public/Register';
+import Home from '../pages/Private/Home';
+import NotFound from '../pages/Public/NotFound';
 import MainLayout from '../layouts/MainLayout';
 import { useAuth } from '../context/AuthContext';
-import Add from '../pages/Add';
-import History from '../pages/History';
-import Report from '../pages/Report';
-import Goals from '../pages/Goals';
-import Settings from '../pages/Settings';
+import Add from '../pages/Private/Add';
+import History from '../pages/Private/History';
+import Report from '../pages/Private/Report';
+import Goals from '../pages/Private/Goals';
+import Settings from '../pages/Private/Settings';
+import Landing from '../pages/Public/Landing';
 
 const PrivateRoute = ({ children }) => {
   const { user } = useAuth();
@@ -27,7 +27,15 @@ const AppRouter = () => {
     <BrowserRouter>
       <Routes>
         <Route
-          path="/"
+          path="/" 
+          element={
+            <PublicRoute>
+              <Landing />
+            </PublicRoute>
+          } 
+        />
+        <Route
+          path="/login"
           element={
             <PublicRoute>
               <Login />
@@ -47,14 +55,6 @@ const AppRouter = () => {
           element={
             <PrivateRoute>
               <Home />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/work"
-          element={
-            <PrivateRoute>
-              <Work />
             </PrivateRoute>
           }
         />
