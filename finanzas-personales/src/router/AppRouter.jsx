@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Login from '../pages/Public/Login';
 import Register from '../pages/Public/Register';
 import Home from '../pages/Private/Home';
@@ -24,83 +24,20 @@ const PublicRoute = ({ children }) => {
 
 const AppRouter = () => {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route
-          path="/" 
-          element={
-            <PublicRoute>
-              <Landing />
-            </PublicRoute>
-          } 
-        />
-        <Route
-          path="/login"
-          element={
-            <PublicRoute>
-              <Login />
-            </PublicRoute>
-          }
-        />
-        <Route
-          path="/register"
-          element={
-            <PublicRoute>
-              <Register />
-            </PublicRoute>
-          }
-        />
-        <Route
-          path="/home"
-          element={
-            <PrivateRoute>
-              <Home />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/add"
-          element={
-            <PrivateRoute>
-              <Add />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/history"
-          element={
-            <PrivateRoute>
-              <History />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/report"
-          element={
-            <PrivateRoute>
-              <Report />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/goals"
-          element={
-            <PrivateRoute>
-              <Goals />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/settings"
-          element={
-            <PrivateRoute>
-              <Settings />
-            </PrivateRoute>
-          }
-        />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </BrowserRouter>
+    <Routes>
+      <Route path="/" element={<PublicRoute><Landing /></PublicRoute>} />
+      <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+      <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+
+      <Route path="/home" element={<PrivateRoute><Home /></PrivateRoute>} />
+      <Route path="/add" element={<PrivateRoute><Add /></PrivateRoute>} />
+      <Route path="/history" element={<PrivateRoute><History /></PrivateRoute>} />
+      <Route path="/report" element={<PrivateRoute><Report /></PrivateRoute>} />
+      <Route path="/goals" element={<PrivateRoute><Goals /></PrivateRoute>} />
+      <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
+
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
 };
 
