@@ -1,5 +1,4 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import Login from '../pages/Public/Login';
 import Register from '../pages/Public/Register';
 import Home from '../pages/Private/Home';
 import NotFound from '../pages/Public/NotFound';
@@ -11,14 +10,22 @@ import Report from '../pages/Private/Report';
 import Goals from '../pages/Private/Goals';
 import Settings from '../pages/Private/Settings';
 import Landing from '../pages/Public/Landing';
+import LoginGoogle from '../pages/Public/Login';
 
 const PrivateRoute = ({ children }) => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+
+  if (loading) return <div className="text-center p-4">{console.log("usuario: ", user)}Cargando...</div>;
+
   return user ? <MainLayout>{children}</MainLayout> : <Navigate to="/" />;
 };
 
+
 const PublicRoute = ({ children }) => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+
+  if (loading) return <div className="text-center p-4">Cargando...</div>;
+
   return !user ? children : <Navigate to="/home" />;
 };
 
@@ -26,7 +33,7 @@ const AppRouter = () => {
   return (
     <Routes>
       <Route path="/" element={<PublicRoute><Landing /></PublicRoute>} />
-      <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+      <Route path="/login" element={<PublicRoute><LoginGoogle /></PublicRoute>} />
       <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
 
       <Route path="/home" element={<PrivateRoute><Home /></PrivateRoute>} />
