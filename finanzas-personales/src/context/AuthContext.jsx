@@ -1,36 +1,26 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import axios from "axios";
+import { loginConGoogle, obtenerUsuarioAutenticado } from "../services/authService";
+import { useUI } from "./UIContext";
 
-// Crear contexto
 const AuthContext = createContext();
-
-// Hook para usar el contexto
 export const useAuth = () => useContext(AuthContext);
 
-// Componente proveedor
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true); // para rutas privadas
+  const [loading, setLoading] = useState(true);
 
-  // const token = localStorage.getItem("token");
+  const { showAlert } = useUI();
 
   const loginGoogle = async (token) => {
     try {
-      const res = await axios.post(
-        "http://localhost:3001/usuarios",
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
+      const usuario = await loginConGoogle(token);
       localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(res.data));
-      setUser(res.data);
+      localStorage.setItem("user", JSON.stringify(usuario));
+      setUser(usuario);
+      showAlert("success", "Inicio de sesión exitoso 🐝");
     } catch (err) {
       console.error("Error en loginGoogle:", err);
+      showAlert("error", err?.response?.data?.error?.mensaje || "Error al iniciar sesión");
       logout();
     }
   };
@@ -39,6 +29,13 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     setUser(null);
+  
+    // Revoca sesión de Google para evitar login automático
+    if (window.google && window.google.accounts && user?.correo) {
+      window.google.accounts.id.revoke(user.correo, (done) => {
+        console.log("🔓 Sesión de Google cerrada.");
+      });
+    }
   };
 
   const verificarSesion = async () => {
@@ -50,25 +47,14 @@ export const AuthProvider = ({ children }) => {
       return;
     }
 
-    console.log("🔐 Token encontrado:", storedToken);
-
     try {
-      const res = await axios.get("http://localhost:3001/usuarios/me", {
-        headers: {
-          Authorization: `Bearer ${storedToken}`,
-        },
-      });
-
-      if (res.data) {
-        setUser(res.data);
-        localStorage.setItem("user", JSON.stringify(res.data));
-        console.log("✅ Sesión válida:", res.data);
-      } else {
-        console.warn("⚠️ No se recibió usuario válido. Cerrando sesión.");
-        logout();
-      }
+      const usuario = await obtenerUsuarioAutenticado(storedToken);
+      setUser(usuario);
+      localStorage.setItem("user", JSON.stringify(usuario));
+      console.log("✅ Sesión válida:", usuario);
     } catch (err) {
       console.error("❌ Error al verificar sesión:", err);
+      showAlert("error", "La sesión ha expirado. Por favor inicia sesión nuevamente.");
       logout();
     } finally {
       setLoading(false);

@@ -1,8 +1,45 @@
-import { Link } from 'react-router-dom';
-import { FaChartPie, FaPiggyBank, FaCalendarAlt } from 'react-icons/fa';
-import Header from '../../components/static/Header';
+import { FaChartPie, FaPiggyBank, FaCalendarAlt, FaGoogle } from "react-icons/fa";
+import { useEffect } from "react";
+import { useAuth } from "../../context/AuthContext";
+import { useUI } from "../../context/UIContext";
+import Header from "../../components/static/Header";
+import Footer from "../../components/static/Footer";
 
 const Landing = () => {
+  const { loginGoogle } = useAuth();
+  const { showAlert } = useUI();
+
+  useEffect(() => {
+    /* global google */
+    if (window.google) {
+      google.accounts.id.initialize({
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+        callback: handleCredentialResponse,
+      });
+    }
+  }, []);
+
+  const handleCredentialResponse = async (response) => {
+    const token = response.credential;
+    if (!token) {
+      showAlert("error", "No se pudo obtener el token de Google");
+      return;
+    }
+    await loginGoogle(token);
+  };
+
+  const handleLoginClick = () => {
+    if (window.google) {
+      google.accounts.id.prompt((notification) => {
+        if (notification.isNotDisplayed()) {
+          showAlert("error", "No se pudo mostrar el diálogo de Google.");
+        }
+      });
+    } else {
+      showAlert("error", "Google API no está disponible.");
+    }
+  };
+
   return (
     <div>
       <Header />
@@ -13,10 +50,14 @@ const Landing = () => {
         <p className="text-lg mb-6 max-w-xl">
           Registra tus gastos, analiza tus ingresos y alcanza tus metas financieras con HoneyMoney.
         </p>
-        <div className="flex flex-col sm:flex-row gap-4">
-          <Link to="/register" className="btn btn-primary btn-wide">Crear cuenta gratis</Link>
-          <Link to="/login" className="btn btn-outline btn-wide">Ya tengo cuenta</Link>
-        </div>
+
+        <button
+          className="btn btn-warning btn-wide gap-2 text-base"
+          onClick={handleLoginClick}
+        >
+          <FaGoogle className="text-lg" />
+          Iniciar sesión con Google
+        </button>
       </section>
 
       {/* Características */}
@@ -41,10 +82,7 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Footer simple (opcional) */}
-      <footer className="footer footer-center p-4 bg-base-300 text-base-content">
-        <p>© {new Date().getFullYear()} HoneyMoney — Cuidando tus finanzas 🐝</p>
-      </footer>
+      <Footer />
     </div>
   );
 };

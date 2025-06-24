@@ -1,5 +1,4 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import Register from '../pages/Public/Register';
 import Home from '../pages/Private/Home';
 import NotFound from '../pages/Public/NotFound';
 import MainLayout from '../layouts/MainLayout';
@@ -34,7 +33,6 @@ const AppRouter = () => {
     <Routes>
       <Route path="/" element={<PublicRoute><Landing /></PublicRoute>} />
       <Route path="/login" element={<PublicRoute><LoginGoogle /></PublicRoute>} />
-      <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
 
       <Route path="/home" element={<PrivateRoute><Home /></PrivateRoute>} />
       <Route path="/add" element={<PrivateRoute><Add /></PrivateRoute>} />
