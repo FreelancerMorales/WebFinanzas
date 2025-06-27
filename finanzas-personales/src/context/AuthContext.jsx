@@ -29,10 +29,10 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     setUser(null);
-  
+
     // Revoca sesión de Google para evitar login automático
     if (window.google && window.google.accounts && user?.correo) {
-      window.google.accounts.id.revoke(user.correo, (done) => {
+      window.google.accounts.id.revoke(user.correo, () => {
         console.log("🔓 Sesión de Google cerrada.");
       });
     }
@@ -52,6 +52,7 @@ export const AuthProvider = ({ children }) => {
       setUser(usuario);
       localStorage.setItem("user", JSON.stringify(usuario));
       console.log("✅ Sesión válida:", usuario);
+      console.log("Token:", storedToken);
     } catch (err) {
       console.error("❌ Error al verificar sesión:", err);
       showAlert("error", "La sesión ha expirado. Por favor inicia sesión nuevamente.");
