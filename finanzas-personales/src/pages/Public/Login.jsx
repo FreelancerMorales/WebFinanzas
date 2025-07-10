@@ -14,9 +14,12 @@ function LoginGoogle() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center p-4">
-      <h1 className="text-xl font-bold mb-4">Inicia sesión con Google</h1>
-      <GoogleLogin onSuccess={handleSuccess} onError={handleError} />
+    <div className="flex flex-col items-center justify-center min-h-screen bg-base-200 px-4">
+      <div className="bg-base-100 p-8 rounded-xl shadow-md text-center max-w-sm w-full">
+        <h1 className="text-2xl font-bold mb-4">Inicia sesión con Google</h1>
+        <GoogleLogin onSuccess={handleSuccess} onError={handleError} />
+        <p className="mt-4 text-xs text-gray-500">Tu información está segura con nosotros.</p>
+      </div>
     </div>
   );
 }
