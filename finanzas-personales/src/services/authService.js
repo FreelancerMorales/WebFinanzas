@@ -1,21 +1,35 @@
-import axios from "axios";
+import api from './api';
 
-const API_URL = "http://localhost:3001/usuarios";
-
-export const loginConGoogle = async (token) => {
-  const res = await axios.post(
-    API_URL,
-    {},
-    {
-      headers: { Authorization: `Bearer ${token}` },
+export const authService = {
+  // Login con Google - almacena token automáticamente
+  loginConGoogle: async (token) => {
+    // Configurar token temporalmente para esta petición
+    const originalToken = localStorage.getItem('token');
+    localStorage.setItem('token', token);
+    
+    try {
+      const result = await api.post('/usuarios');
+      // El token ya está guardado, solo retornamos los datos
+      window.location.href = '/home';
+      return result.data;
+    } catch (error) {
+      // Si falla, restaurar token original
+      if (originalToken) {
+        localStorage.setItem('token', originalToken);
+      } else {
+        localStorage.removeItem('token');
+      }
+      throw error;
     }
-  );
-  return res.data.datos;
-};
+  },
 
-export const obtenerUsuarioAutenticado = async (token) => {
-  const res = await axios.get(`${API_URL}/me`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return res.data.datos;
+  // Obtener usuario autenticado
+  obtenerUsuarioAutenticado: () => api.get('/usuarios/me'),
+  
+  // Logout - limpiar datos locales
+  logout: () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/login';
+  }
 };

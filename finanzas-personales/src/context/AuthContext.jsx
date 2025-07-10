@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { loginConGoogle, obtenerUsuarioAutenticado } from "../services/authService";
+import { authService } from "../services/authService";
 import { useUI } from "./UIContext";
 
 const AuthContext = createContext();
@@ -13,7 +13,7 @@ export const AuthProvider = ({ children }) => {
 
   const loginGoogle = async (token) => {
     try {
-      const usuario = await loginConGoogle(token);
+      const usuario = await authService.loginConGoogle(token);
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(usuario));
       setUser(usuario);
@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     try {
-      const usuario = await obtenerUsuarioAutenticado(storedToken);
+      const usuario = await authService.obtenerUsuarioAutenticado(storedToken);
       setUser(usuario);
       localStorage.setItem("user", JSON.stringify(usuario));
       console.log("✅ Sesión válida:", usuario);
