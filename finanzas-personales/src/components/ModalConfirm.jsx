@@ -25,34 +25,3 @@ const ModalConfirm = () => {
 };
 
 export default ModalConfirm;
-// This component uses the UIContext to manage modal state.
-// It displays a confirmation dialog with a title, description, and confirm/cancel buttons.
-
-
-/*
-
-import { useUI } from '../../context/UIContext';
-
-  const { showAlert } = useUI();
-  const { showModal } = useUI();
-
-        <button onClick=
-      {() =>
-        showModal({
-          title: '¿Eliminar movimiento?',
-          description: 'Esto borrará el registro permanentemente.',
-          onConfirm: () => {
-            showAlert('success', 'Movimiento eliminado correctamente.');
-            console.log('Movimiento eliminado');
-          },
-          closeModal: () => {
-            showAlert('error', 'Eliminación cancelada.');
-            console.log('Eliminación cancelada');
-          }
-        })
-      }
-        className="btn btn-error m-4"
-      >
-        Eliminar movimiento
-      </button>
-*/

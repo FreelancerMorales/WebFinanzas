@@ -1,62 +1,76 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useUI } from '../context/UIContext';
+// formatters.js - Utilidades para formatear datos
+import { TIPOS_CUENTA } from './constants';
 
-export const useApi = (apiFunction, options = {}) => {
-  const { 
-    autoExecute = false, 
-    dependencies = [], 
-    showErrorAlert = true,
-    showSuccessAlert = false,
-    successMessage = 'Operación exitosa'
-  } = options;
+export const formatters = {
+  // Formatear moneda
+  moneda: (valor, moneda = 'GTQ') => {
+    if (valor === null || valor === undefined) return 'Q0.00';
+    
+    return new Intl.NumberFormat('es-GT', {
+      style: 'currency',
+      currency: moneda,
+      minimumFractionDigits: 2
+    }).format(valor);
+  },
 
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const { showAlert } = useUI();
+  // Formatear número
+  numero: (valor, decimales = 2) => {
+    if (valor === null || valor === undefined) return '0';
+    
+    return new Intl.NumberFormat('es-GT', {
+      minimumFractionDigits: decimales,
+      maximumFractionDigits: decimales
+    }).format(valor);
+  },
 
-  const execute = useCallback(async (...args) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const result = await apiFunction(...args);
-      setData(result);
-      
-      if (showSuccessAlert) {
-        showAlert('success', successMessage);
+  // Formatear fecha
+  fecha: (fecha, formato = 'short') => {
+    if (!fecha) return '';
+    
+    const opciones = {
+      short: { day: '2-digit', month: '2-digit', year: 'numeric' },
+      long: { day: '2-digit', month: 'long', year: 'numeric' },
+      dateTime: { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
       }
-      
-      return result;
-    } catch (err) {
-      setError(err);
-      
-      if (showErrorAlert) {
-        showAlert('error', err.message);
-      }
-      
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [apiFunction, showAlert, showErrorAlert, showSuccessAlert, successMessage]);
+    };
 
-  const reset = useCallback(() => {
-    setData(null);
-    setError(null);
-    setLoading(false);
-  }, []);
+    return new Intl.DateTimeFormat('es-GT', opciones[formato]).format(new Date(fecha));
+  },
 
-  useEffect(() => {
-    if (autoExecute) {
-      execute();
-    }
-  }, [execute, autoExecute, ...dependencies]);
+  // Formatear tipo de cuenta
+  tipoCuenta: (tipo) => {
+    const tipos = {
+      [TIPOS_CUENTA.EFECTIVO]: 'Efectivo',
+      [TIPOS_CUENTA.BANCO]: 'Cuenta Bancaria',
+      [TIPOS_CUENTA.TARJETA_CREDITO]: 'Tarjeta de Crédito',
+      [TIPOS_CUENTA.TARJETA_DEBITO]: 'Tarjeta de Débito',
+      [TIPOS_CUENTA.AHORRO]: 'Cuenta de Ahorro',
+      [TIPOS_CUENTA.INVERSION]: 'Inversión'
+    };
+    
+    return tipos[tipo] || tipo;
+  },
 
-  return { 
-    data, 
-    loading, 
-    error, 
-    execute, 
-    reset 
-  };
+  // Formatear texto (capitalizar primera letra)
+  capitalize: (texto) => {
+    if (!texto) return '';
+    return texto.charAt(0).toUpperCase() + texto.slice(1).toLowerCase();
+  },
+
+  // Formatear porcentaje
+  porcentaje: (valor, decimales = 1) => {
+    if (valor === null || valor === undefined) return '0%';
+    return `${(valor * 100).toFixed(decimales)}%`;
+  },
+
+  // Truncar texto
+  truncar: (texto, limite = 50) => {
+    if (!texto) return '';
+    return texto.length > limite ? texto.substring(0, limite) + '...' : texto;
+  }
 };
