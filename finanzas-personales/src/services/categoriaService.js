@@ -1,8 +1,8 @@
 import api from './api';
 
 export const categoriaService = {
-  // Obtener todas las categorías
-  obtenerCategorias: () => api.get('/categorias'),
+  // Obtener todas las categorías con paginación
+  obtenerCategorias: (page = 1, limit = 10) => api.get(`/categorias?page=${page}&limit=${limit}`),
   
   // Obtener jerarquía de categorías
   obtenerJerarquiaCategorias: () => api.get('/categorias/jerarquia'),

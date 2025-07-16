@@ -11,7 +11,14 @@ export const useTiposMovimiento = () => {
     try {
       setLoading(true);
       const result = await tipoMovimientoService.obtenerTiposMovimiento();
-      setTiposMovimiento(result.data || []);
+      const ok = result.ok;
+      const data = result.datos.tiposMovimiento || [];
+
+      if (!ok) {
+        throw new Error(result.mensaje);
+      }
+
+      setTiposMovimiento(data || []);
     } catch (error) {
       showAlert('error', error.message);
     } finally {

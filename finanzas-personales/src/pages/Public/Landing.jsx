@@ -68,6 +68,7 @@ const Landing = () => {
         width: "100%",
       });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const features = [

@@ -11,7 +11,34 @@ export const useCuentas = () => {
     try {
       setLoading(true);
       const result = await cuentaService.obtenerCuentas();
-      setCuentas(result.data || []);
+      const ok = result.ok;
+      const data = result.datos.cuentas || [];
+
+      if (!ok) {
+        throw new Error(result.mensaje);
+      }
+
+
+      // logs desgloce JSON
+      console.log('Resultado de obtenerCuentas:', result);
+      console.log('Estado de la respuesta:', ok);
+      console.log('Mensaje de la respuesta:', result.mensaje);
+
+      console.log('Datos:', result.datos);
+      console.log('Cantidad Cuentas: ', result.datos.total);
+      console.log('Paginas:', result.datos.page);
+      console.log('Total de Paginas:', result.datos.totalPages);
+
+      console.log('Cuentas:', result.datos.cuentas);
+      console.log('Cuentas:', result.datos.cuentas.map(cuenta => ({
+        id: cuenta.id,
+        nombre: cuenta.nombre,
+        saldo: cuenta.montoInicial
+      })));
+      console.log( 'Tipo Cuentas: ' + result.datos.cuentas.map(cuenta => cuenta.tipo));
+      
+
+      setCuentas(data || []);
     } catch (error) {
       showAlert('error', error.message);
     } finally {
@@ -19,9 +46,9 @@ export const useCuentas = () => {
     }
   };
 
-  const crearCuenta = async (datos) => {
+  const crearCuenta = async (data) => {
     try {
-      const result = await cuentaService.crearCuenta(datos);
+      const result = await cuentaService.crearCuenta(data);
       await cargarCuentas();
       showAlert('success', 'Cuenta creada exitosamente');
       return result;
@@ -31,9 +58,9 @@ export const useCuentas = () => {
     }
   };
 
-  const actualizarCuenta = async (id, datos) => {
+  const actualizarCuenta = async (id, data) => {
     try {
-      const result = await cuentaService.actualizarCuenta(id, datos);
+      const result = await cuentaService.actualizarCuenta(id, data);
       await cargarCuentas();
       showAlert('success', 'Cuenta actualizada exitosamente');
       return result;
