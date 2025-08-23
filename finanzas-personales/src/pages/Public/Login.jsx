@@ -5,7 +5,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useUI } from "../../context/UIContext";
 
 const LoginGoogle = () => {
-  const { loginGoogle, loading } = useAuth();
+  const { loading, login } = useAuth();
   const { showAlert } = useUI();
   const googleButtonRef = useRef(null);
   const [showAnimation, setShowAnimation] = useState(false);
@@ -22,10 +22,10 @@ const LoginGoogle = () => {
     }
 
     try {
-      await loginGoogle(token);
+      await login(token);
     } catch (err) {
       showAlert("error", "Error al iniciar sesión con Google");
-      console.log("Error en loginGoogle:", err);
+      console.log("Error en login:", err);
       
     }
   };

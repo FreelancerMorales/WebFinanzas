@@ -7,7 +7,7 @@ import Footer from "../../components/static/Footer";
 import { GiDrippingHoney, GiHoneycomb } from "react-icons/gi";
 
 const Landing = () => {
-  const { loginGoogle } = useAuth();
+  const { login } = useAuth();
   const { showAlert } = useUI();
   const googleButtonRef = useRef(null);
 
@@ -43,10 +43,10 @@ const Landing = () => {
     }
 
     try {
-      await loginGoogle(token);
+      await login(token);
     } catch (err) {
       showAlert("error", "Error al iniciar sesión con Google");
-      console.log("Error en loginGoogle:", err);
+      console.log("Error en login:", err);
       
     }
   };
@@ -283,7 +283,7 @@ const Landing = () => {
               Únete a la colmena de usuarios inteligentes que ya controlan su dinero con HoneyMoney
             </p>
             <button
-              onClick={() => loginGoogle()}
+              onClick={() => login()}
               className="btn btn-lg bg-white text-amber-600 hover:bg-amber-50 border-none gap-3 hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl group"
             >
               <FaGoogle className="text-xl group-hover:animate-pulse" />

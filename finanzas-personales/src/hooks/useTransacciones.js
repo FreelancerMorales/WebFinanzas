@@ -12,7 +12,108 @@ export const useTransacciones = () => {
     try {
       setLoading(true);
       const result = await transaccionService.obtenerTransacciones(filtros);
-      setTransacciones(result.data || []);
+      const ok = result.ok;
+      const data = result.datos.transacciones || [];
+
+      if (!ok) {
+        throw new Error(result.mensaje);
+      }
+
+      /*POST BACK
+          const nuevaTransaccion = await prisma.transaccion.create({
+      data: {
+        monto: parseFloat(monto),
+        descripcion,
+        fecha: fecha ? new Date(fecha) : new Date(),
+        cuentaId,
+        categoriaId,
+        tipoMovimientoId,
+        tipoPagoId,
+        plantillaId,
+        usuarioId: req.usuario.id,
+        etiquetas: {
+          create: etiquetaIds.map((etiquetaId) => ({
+            etiquetaId,
+          })),
+        },
+      },
+      include: {
+        cuenta: {
+          select: { id: true, nombre: true, tipo: true, color: true },
+        },
+        categoria: {
+          select: { id: true, nombre: true, icono: true, color: true },
+        },
+        tipoMovimiento: {
+          select: { id: true, nombre: true },
+        },
+        tipoPago: {
+          select: { id: true, nombre: true },
+        },
+        plantilla: {
+          select: { id: true, nombre: true },
+        },
+        etiquetas: {
+          include: {
+            etiqueta: {
+              select: { id: true, nombre: true, color: true },
+            },
+          },
+        },
+      },
+    });
+      */
+
+      // logs desgloce JSON
+      console.log('Resultado de cargarTransacciones:', result);
+      console.log('Estado de la respuesta:', ok);
+      console.log('Mensaje de la respuesta:', result.mensaje);
+      console.log('Datos:', result.datos);
+      console.log('Cantidad Transacciones: ', result.datos.total);
+      console.log('Paginas:', result.datos.page);
+      console.log('Total de Paginas:', result.datos.totalPages);
+      console.log('Transacciones:', result.datos.transacciones);
+      console.log('Transacción:', result.datos.transacciones.map(transaccion => ({
+        id: transaccion.id,
+        monto: transaccion.monto,
+        descripcion: transaccion.descripcion,
+        fecha: transaccion.fecha,
+        cuentaId: transaccion.cuentaId,
+        categoriaId: transaccion.categoriaId,
+        cuenta: {
+          id: transaccion.cuenta.id,
+          nombre: transaccion.cuenta.nombre,
+          tipo: transaccion.cuenta.tipo,
+          color: transaccion.cuenta.color
+        },
+        categoria: {
+          id: transaccion.categoria.id,
+          nombre: transaccion.categoria.nombre,
+          icono: transaccion.categoria.icono,
+          color: transaccion.categoria.color
+        },
+        tipoMovimientoId: transaccion.tipoMovimientoId,
+        tipoMovimiento: {
+          id: transaccion.tipoMovimiento.id,
+          nombre: transaccion.tipoMovimiento.nombre
+        },
+        tipoPagoId: transaccion.tipoPagoId,
+        plantillaId: transaccion.plantillaId,
+        plantilla: transaccion.plantilla ? {
+          id: transaccion.plantilla.id,
+          nombre: transaccion.plantilla.nombre
+        } : null,
+
+        usuarioId: transaccion.usuarioId,
+        etiquetas: transaccion.etiquetas.map(etiqueta => ({
+          id: etiqueta.id,
+          nombre: etiqueta.nombre,
+          color: etiqueta.color
+        }))
+      })));
+      console.log('✅ Transacciones cargadas exitosamente:', result.datos.transacciones.length);
+
+      setTransacciones(data || []);
       return result;
     } catch (error) {
       showAlert('error', error.message);
@@ -25,7 +126,13 @@ export const useTransacciones = () => {
   const cargarEstadisticas = useCallback(async (filtros = {}) => {
     try {
       const result = await transaccionService.obtenerEstadisticasTransacciones(filtros);
-      setEstadisticas(result.data || null);
+      const ok = result.ok;
+      const data = result.datos || [];
+      if (!ok) {
+        throw new Error(result.mensaje);
+      }
+
+      setEstadisticas(data || null);
       return result;
     } catch (error) {
       showAlert('error', error.message);

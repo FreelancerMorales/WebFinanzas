@@ -1,104 +1,143 @@
-// useUsuarios.js
-import { useState, useEffect } from 'react';
+import { useCallback } from 'react';
+import { useApi } from './useApi';
 import { usuarioService } from '../services/usuarioService';
-import { useUI } from '../context/UIContext';
 
-export const useUsuarios = () => {
-  const [usuarios, setUsuarios] = useState([]);
-  const [usuarioActual, setUsuarioActual] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const { showAlert } = useUI();
+export const useUsuario = () => {
+  // Hook para autenticación
+  const {
+    data: authData,
+    loading: authLoading,
+    error: authError,
+    execute: autenticar
+  } = useApi(usuarioService.autenticar, {
+    showSuccessAlert: true,
+    successMessage: 'Autenticación exitosa'
+  });
 
-  // Cargar usuario autenticado
-  const cargarUsuarioAutenticado = async () => {
-    try {
-      setLoading(true);
-      const result = await usuarioService.obtenerUsuarioAutenticado();
-      setUsuarioActual(result.data || null);
-      return result;
-    } catch (error) {
-      showAlert('error', error.message);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Hook para obtener perfil
+  const {
+    data: perfil,
+    loading: perfilLoading,
+    error: perfilError,
+    execute: obtenerPerfil
+  } = useApi(usuarioService.obtenerPerfil);
 
-  // Cargar todos los usuarios (solo admin)
-  const cargarUsuarios = async () => {
-    try {
-      setLoading(true);
-      const result = await usuarioService.obtenerUsuarios();
-      setUsuarios(result.data || []);
-      return result;
-    } catch (error) {
-      showAlert('error', error.message);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Hook para actualizar perfil
+  const {
+    data: perfilActualizado,
+    loading: actualizandoPerfil,
+    error: errorActualizacion,
+    execute: ejecutarActualizacion
+  } = useApi(usuarioService.actualizarPerfil, {
+    showSuccessAlert: true,
+    successMessage: 'Perfil actualizado exitosamente'
+  });
 
-  // Actualizar usuario
-  const actualizarUsuario = async (id, datos) => {
-    try {
-      const result = await usuarioService.actualizarUsuario(id, datos);
-      
-      // Si es el usuario actual, actualizar el estado
-      if (usuarioActual && usuarioActual.id === id) {
-        setUsuarioActual(result.data);
-      }
-      
-      // Si tenemos lista de usuarios, actualizarla
-      if (usuarios.length > 0) {
-        await cargarUsuarios();
-      }
-      
-      showAlert('success', 'Usuario actualizado exitosamente');
-      return result;
-    } catch (error) {
-      showAlert('error', error.message);
-      throw error;
-    }
-  };
+  // Hook para obtener resumen/dashboard
+  const {
+    data: resumen,
+    loading: resumenLoading,
+    error: resumenError,
+    execute: obtenerResumen
+  } = useApi(usuarioService.obtenerResumen);
 
-  // Eliminar usuario (solo admin)
-  const eliminarUsuario = async (id) => {
-    try {
-      await usuarioService.eliminarUsuario(id);
-      await cargarUsuarios();
-      showAlert('success', 'Usuario eliminado exitosamente');
-    } catch (error) {
-      showAlert('error', error.message);
-      throw error;
-    }
-  };
+  // Hook para inicializar categorías
+  const {
+    data: categoriasInicializadas,
+    loading: inicializandoCategorias,
+    error: errorCategorias,
+    execute: inicializarCategorias
+  } = useApi(usuarioService.inicializarCategorias, {
+    showSuccessAlert: true,
+    successMessage: 'Categorías inicializadas exitosamente'
+  });
 
-  // Reactivar usuario (solo admin)
-  const reactivarUsuario = async (id) => {
-    try {
-      await usuarioService.reactivarUsuario(id);
-      await cargarUsuarios();
-      showAlert('success', 'Usuario reactivado exitosamente');
-    } catch (error) {
-      showAlert('error', error.message);
-      throw error;
-    }
-  };
+  // Hook para obtener estadísticas
+  const {
+    data: estadisticas,
+    loading: estadisticasLoading,
+    error: estadisticasError,
+    execute: ejecutarEstadisticas
+  } = useApi(usuarioService.obtenerEstadisticas);
 
-  // Cargar usuario autenticado al montar el hook
-  useEffect(() => {
-    cargarUsuarioAutenticado();
-  }, []);
+  // Hook para desactivar cuenta
+  const {
+    data: cuentaDesactivada,
+    loading: desactivando,
+    error: errorDesactivacion,
+    execute: desactivar
+  } = useApi(usuarioService.desactivar, {
+    showSuccessAlert: true,
+    successMessage: 'Cuenta desactivada exitosamente'
+  });
+
+  // Hook para reactivar cuenta
+  const {
+    data: cuentaReactivada,
+    loading: reactivando,
+    error: errorReactivacion,
+    execute: reactivar
+  } = useApi(usuarioService.reactivar, {
+    showSuccessAlert: true,
+    successMessage: 'Cuenta reactivada exitosamente'
+  });
+
+  // Función wrapper para actualizar perfil
+  const actualizarPerfil = useCallback((datos) => {
+    return ejecutarActualizacion(datos);
+  }, [ejecutarActualizacion]);
+
+  // Función wrapper para obtener estadísticas
+  const obtenerEstadisticas = useCallback((fechaInicio, fechaFin) => {
+    return ejecutarEstadisticas(fechaInicio, fechaFin);
+  }, [ejecutarEstadisticas]);
 
   return {
-    usuarios,
-    usuarioActual,
-    loading,
-    cargarUsuarioAutenticado,
-    cargarUsuarios,
-    actualizarUsuario,
-    eliminarUsuario,
-    reactivarUsuario
+    // Autenticación
+    authData,
+    authLoading,
+    authError,
+    autenticar,
+
+    // Perfil
+    perfil,
+    perfilLoading,
+    perfilError,
+    obtenerPerfil,
+
+    // Actualizar perfil
+    perfilActualizado,
+    actualizandoPerfil,
+    errorActualizacion,
+    actualizarPerfil,
+
+    // Resumen/Dashboard
+    resumen,
+    resumenLoading,
+    resumenError,
+    obtenerResumen,
+
+    // Categorías
+    categoriasInicializadas,
+    inicializandoCategorias,
+    errorCategorias,
+    inicializarCategorias,
+
+    // Estadísticas
+    estadisticas,
+    estadisticasLoading,
+    estadisticasError,
+    obtenerEstadisticas,
+
+    // Gestión de cuenta
+    cuentaDesactivada,
+    desactivando,
+    errorDesactivacion,
+    desactivar,
+
+    cuentaReactivada,
+    reactivando,
+    errorReactivacion,
+    reactivar
   };
 };
