@@ -507,6 +507,8 @@ const UserSettings = () => {
                   </div>
                 )}
 
+                {console.log(estadisticas)}
+
                 {estadisticas && estadisticas.datos && (
                   <div className="bg-base-100 rounded-lg p-4">
                     <h4 className="font-semibold text-base mb-4">📊 Estadísticas del período</h4>

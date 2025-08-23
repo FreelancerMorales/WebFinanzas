@@ -1,734 +1,1080 @@
 import { useState, useEffect } from 'react';
 import { useTransacciones } from '../../hooks/useTransacciones';
-import { useUI } from '../../context/UIContext';
+
 import { 
-  FiPlus, 
-  FiEdit3, 
-  FiTrash2, 
-  FiFilter, 
-  FiX, 
-  FiCalendar, 
-  FiDollarSign, 
-  FiCreditCard, 
-  FiTag,
-  FiSearch,
-  FiRefreshCw
+  FiPlus, FiEdit2, FiTrash2, FiEye, FiFilter, FiRefreshCw, 
+  FiChevronLeft, FiChevronRight, FiCalendar, FiDollarSign,
+  FiTrendingUp, FiTrendingDown, FiTag, FiX, FiCheck,
+  FiSearch, FiBarChart, FiCreditCard
 } from 'react-icons/fi';
 
-import {
-  TfiBarChart
-} from 'react-icons/tfi';
-import Loader from '../static/Loader';
-import { useCuentas } from '../../hooks/useCuentas';
-import { useTiposMovimiento } from '../../hooks/useTiposMovimiento';
-import { useCategorias } from '../../hooks/useCategorias';
+import { 
+  FaArrowLeft, 
+  FaCalendarAlt, 
+  FaMoneyBillWave, 
+  FaFileAlt, 
+  FaCreditCard, 
+  FaTag, 
+  FaPlus, 
+  FaTimes,
+  FaCheckCircle,
+  FaTimesCircle,
+  FaChartBar
+} from 'react-icons/fa';
 
 const Transacciones = () => {
   const {
+    // Datos
     transacciones,
-    estadisticas,
-    loading,
-    cargarTransacciones,
-    cargarEstadisticas,
-    crearTransaccion,
-    actualizarTransaccion,
-    eliminarTransaccion
+    transaccion,
+    resumen,
+    transaccionesPorCuenta,
+
+    // Estados de carga
+    cargandoTransacciones,
+    cargandoTransaccion,
+    creandoTransaccion,
+    actualizandoTransaccion,
+    eliminandoTransaccion,
+    cargandoResumen,
+    cargandoPorCuenta,
+    confirmandoTransaccion,
+    desconfirmandoTransaccion,
+    agregandoEtiquetas,
+    removiendoEtiquetas,
+
+    // Métodos
+    crear,
+    obtenerTodas,
+    obtenerPorId,
+    actualizar,
+    eliminar,
+    obtenerResumen,
+    obtenerPorCuenta,
+    confirmar,
+    desconfirmar,
+    agregarEtiquetas,
+    removerEtiquetas
   } = useTransacciones();
 
-  const { cuentas } = useCuentas();
-  const { tiposMovimiento } = useTiposMovimiento();
-  const { categorias } = useCategorias();
+  const [mostrarFiltros, setMostrarFiltros] = useState(false);
 
-  const { showModal } = useUI();
-
-  // Estados para filtros
+  // Estados locales para formularios y filtros
+  const [vistaActual, setVistaActual] = useState('lista'); // 'lista', 'crear', 'editar', 'detalle', 'resumen'
+  const [transaccionSeleccionada, setTransaccionSeleccionada] = useState(null);
   const [filtros, setFiltros] = useState({
+    limite: 50,
+    pagina: 1,
     fechaInicio: '',
     fechaFin: '',
     cuentaId: '',
-    categoriaId: '',
     tipoMovimientoId: '',
-    page: 1,
-    limit: 10
+    confirmada: 'true'
   });
-
-  // Estados para formulario de nueva transacción
-  const [mostrarFormulario, setMostrarFormulario] = useState(false);
-  const [transaccionEditando, setTransaccionEditando] = useState(null);
-  const [formData, setFormData] = useState({
+  const [datosFormulario, setDatosFormulario] = useState({
     monto: '',
     descripcion: '',
-    fecha: new Date().toISOString().split('T')[0],
+    fecha: new Date().toISOString().slice(0, 16),
     cuentaId: '',
-    categoriaId: '',
     tipoMovimientoId: '',
     tipoPagoId: '',
-    plantillaId: '',
-    etiquetaIds: []
+    usuarioCategoriaId: '',
+    confirmada: true,
+    notas: ''
   });
+  const [filtrosResumen, setFiltrosResumen] = useState({
+    fechaInicio: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
+    fechaFin: new Date().toISOString().split('T')[0]
+  });
+  const [etiquetasSeleccionadas, setEtiquetasSeleccionadas] = useState([]);
 
   // Cargar transacciones al montar el componente
   useEffect(() => {
-    cargarTransacciones(filtros);
+    obtenerTodas(filtros);
   }, []);
 
+  // Manejar cambios en formulario
+  const manejarCambioFormulario = (campo, valor) => {
+    setDatosFormulario(prev => ({ ...prev, [campo]: valor }));
+  };
+
   // Manejar cambios en filtros
-  const handleFiltroChange = (e) => {
-    const { name, value } = e.target;
-    setFiltros(prev => ({
-      ...prev,
-      [name]: value,
-      page: 1 // Reset page when filters change
-    }));
+  const manejarCambioFiltro = (campo, valor) => {
+    setFiltros(prev => ({ ...prev, [campo]: valor }));
   };
 
   // Aplicar filtros
   const aplicarFiltros = () => {
-    cargarTransacciones(filtros);
+    obtenerTodas(filtros);
   };
 
   // Limpiar filtros
   const limpiarFiltros = () => {
     const filtrosLimpios = {
+      limite: 50,
+      pagina: 1,
       fechaInicio: '',
       fechaFin: '',
       cuentaId: '',
-      categoriaId: '',
       tipoMovimientoId: '',
-      page: 1,
-      limit: 10
+      confirmada: 'true'
     };
     setFiltros(filtrosLimpios);
-    cargarTransacciones(filtrosLimpios);
+    obtenerTodas(filtrosLimpios);
   };
 
-  // Manejar cambios del formulario
-  const handleFormChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  // Abrir formulario para nueva transacción
-  const abrirFormularioNuevo = () => {
-    setTransaccionEditando(null);
-    setFormData({
-      monto: '',
-      descripcion: '',
-      fecha: new Date().toISOString().split('T')[0],
-      cuentaId: '',
-      categoriaId: '',
-      tipoMovimientoId: '',
-      tipoPagoId: '',
-      plantillaId: '',
-      etiquetaIds: []
-    });
-    setMostrarFormulario(true);
-  };
-
-  // Abrir formulario para editar transacción
-  const abrirFormularioEditar = (transaccion) => {
-    setTransaccionEditando(transaccion);
-    setFormData({
-      monto: transaccion.monto.toString(),
-      descripcion: transaccion.descripcion || '',
-      fecha: new Date(transaccion.fecha).toISOString().split('T')[0],
-      cuentaId: transaccion.cuentaId.toString(),
-      categoriaId: transaccion.categoriaId.toString(),
-      tipoMovimientoId: transaccion.tipoMovimientoId.toString(),
-      tipoPagoId: transaccion.tipoPagoId?.toString() || '',
-      plantillaId: transaccion.plantillaId?.toString() || '',
-      etiquetaIds: transaccion.etiquetas?.map(e => e.id) || []
-    });
-    setMostrarFormulario(true);
-  };
-
-  // Guardar transacción (crear o actualizar)
-  const guardarTransaccion = async () => {
-    
+  // Crear nueva transacción
+  const manejarCrear = async () => {
     try {
-      const datos = {
-        ...formData,
-        monto: parseFloat(formData.monto),
-        cuentaId: parseInt(formData.cuentaId),
-        categoriaId: parseInt(formData.categoriaId),
-        tipoMovimientoId: parseInt(formData.tipoMovimientoId),
-        tipoPagoId: formData.tipoPagoId ? parseInt(formData.tipoPagoId) : null,
-        plantillaId: formData.plantillaId ? parseInt(formData.plantillaId) : null
-      };
-
-      if (transaccionEditando) {
-        await actualizarTransaccion(transaccionEditando.id, datos);
-      } else {
-        await crearTransaccion(datos);
-      }
-
-      setMostrarFormulario(false);
-      cargarTransacciones(filtros); // Recargar lista
+      await crear(datosFormulario);
+      setVistaActual('lista');
+      limpiarFormulario();
+      obtenerTodas(filtros); // Refrescar lista
     } catch (error) {
-      console.error('Error al guardar transacción:', error);
+      console.error('Error al crear transacción:', error);
     }
   };
 
-  // Confirmar eliminación
-  const confirmarEliminacion = (transaccion) => {
-    showModal({
-      title: 'Eliminar Transacción',
-      description: `¿Estás seguro de que deseas eliminar la transacción "${transaccion.descripcion || 'Sin descripción'}"?`,
-      onConfirm: () => handleEliminar(transaccion.id)
-    });
+  // Actualizar transacción
+  const manejarActualizar = async () => {
+    try {
+      await actualizar(transaccionSeleccionada.id, datosFormulario);
+      setVistaActual('lista');
+      limpiarFormulario();
+      obtenerTodas(filtros); // Refrescar lista
+    } catch (error) {
+      console.error('Error al actualizar transacción:', error);
+    }
   };
 
   // Eliminar transacción
-  const handleEliminar = async (id) => {
-    try {
-      await eliminarTransaccion(id);
-      cargarTransacciones(filtros); // Recargar lista
-    } catch (error) {
-      console.error('Error al eliminar transacción:', error);
+  const manejarEliminar = async (id) => {
+    if (window.confirm('¿Está seguro de eliminar esta transacción?')) {
+      try {
+        await eliminar(id);
+        obtenerTodas(filtros); // Refrescar lista
+      } catch (error) {
+        console.error('Error al eliminar transacción:', error);
+      }
     }
   };
 
-  // Formatear fecha para mostrar
-  const formatearFecha = (fecha) => {
-    return new Date(fecha).toLocaleDateString('es-ES');
+  // Ver detalle de transacción
+  const verDetalle = async (id) => {
+    try {
+      await obtenerPorId(id);
+      setVistaActual('detalle');
+    } catch (error) {
+      console.error('Error al obtener transacción:', error);
+    }
   };
 
-  const numberFormatter = new Intl.NumberFormat('es-US', {
-    style: 'currency',
-  currency: 'GTQ',
-  });
-  
-  // Formatear monto
-  const formatearMonto = (monto) => {
-    return numberFormatter.format(monto);
+  // Editar transacción
+  const editarTransaccion = (transaccionData) => {
+    setTransaccionSeleccionada(transaccionData);
+    setDatosFormulario({
+      monto: transaccionData.monto,
+      descripcion: transaccionData.descripcion || '',
+      fecha: transaccionData.fecha.slice(0, 16),
+      cuentaId: transaccionData.cuenta.id,
+      tipoMovimientoId: transaccionData.tipomovimiento.id,
+      tipoPagoId: transaccionData.tipopago?.id || '',
+      usuarioCategoriaId: transaccionData.usuariocategoria.id,
+      confirmada: transaccionData.confirmada,
+      notas: transaccionData.notas || ''
+    });
+    setVistaActual('editar');
   };
 
-  return (
-    <div className="container mx-auto p-4 max-w-7xl">
+  // Confirmar/Desconfirmar transacción
+  const manejarCambioConfirmacion = async (id, confirmar) => {
+    try {
+      if (confirmar) {
+        await confirmar(id);
+      } else {
+        await desconfirmar(id);
+      }
+      obtenerTodas(filtros); // Refrescar lista
+    } catch (error) {
+      console.error('Error al cambiar confirmación:', error);
+    }
+  };
+
+  // Obtener resumen
+  const manejarObtenerResumen = () => {
+    if (filtrosResumen.fechaInicio && filtrosResumen.fechaFin) {
+      obtenerResumen(filtrosResumen.fechaInicio, filtrosResumen.fechaFin);
+      setVistaActual('resumen');
+    }
+  };
+
+  // Obtener por cuenta
+  const manejarObtenerPorCuenta = (cuentaId) => {
+    obtenerPorCuenta(cuentaId, { limite: 20, pagina: 1 });
+  };
+
+  // Manejar etiquetas
+  const manejarAgregarEtiquetas = async (transaccionId) => {
+    if (etiquetasSeleccionadas.length > 0) {
+      try {
+        await agregarEtiquetas(transaccionId, etiquetasSeleccionadas);
+        obtenerTodas(filtros); // Refrescar lista
+        setEtiquetasSeleccionadas([]);
+      } catch (error) {
+        console.error('Error al agregar etiquetas:', error);
+      }
+    }
+  };
+
+  const manejarRemoverEtiquetas = async (transaccionId, etiquetaIds) => {
+    try {
+      await removerEtiquetas(transaccionId, etiquetaIds);
+      obtenerTodas(filtros); // Refrescar lista
+    } catch (error) {
+      console.error('Error al remover etiquetas:', error);
+    }
+  };
+
+  // Limpiar formulario
+  const limpiarFormulario = () => {
+    setDatosFormulario({
+      monto: '',
+      descripcion: '',
+      fecha: new Date().toISOString().slice(0, 16),
+      cuentaId: '',
+      tipoMovimientoId: '',
+      tipoPagoId: '',
+      usuarioCategoriaId: '',
+      confirmada: true,
+      notas: ''
+    });
+    setTransaccionSeleccionada(null);
+  };
+
+  // Renderizado de vista de lista
+  const renderLista = () => (
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-base-content">Gestión de Transacciones</h1>
-          <p className="text-base-content/70 mt-1">Administra y controla todas tus transacciones financieras</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex items-center gap-2">
+          <FiCreditCard className="text-2xl text-primary" />
+          <h1 className="text-3xl font-bold text-base-content">Transacciones</h1>
         </div>
-        <button 
-          onClick={abrirFormularioNuevo} 
-          className="btn btn-primary gap-2 shadow-lg"
-        >
-          <FiPlus className="w-4 h-4" />
-          Nueva Transacción
-        </button>
-      </div>
-
-      {/* Filtros Card */}
-      <div className="card bg-base-100 shadow-xl mb-6">
-        <div className="card-body">
-          <div className="flex items-center gap-2 mb-4">
-            <FiFilter className="w-5 h-5 text-primary" />
-            <h3 className="card-title">Filtros de Búsqueda</h3>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text font-medium">
-                  <FiCalendar className="w-4 h-4 inline mr-1" />
-                  Fecha Inicio
-                </span>
-              </label>
-              <input
-                type="date"
-                name="fechaInicio"
-                value={filtros.fechaInicio}
-                onChange={handleFiltroChange}
-                className="input input-bordered focus:input-primary"
-              />
-            </div>
-
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text font-medium">
-                  <FiCalendar className="w-4 h-4 inline mr-1" />
-                  Fecha Fin
-                </span>
-              </label>
-              <input
-                type="date"
-                name="fechaFin"
-                value={filtros.fechaFin}
-                onChange={handleFiltroChange}
-                className="input input-bordered focus:input-primary"
-              />
-            </div>
-
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text font-medium">
-                  <FiCreditCard className="w-4 h-4 inline mr-1" />
-                  Cuenta
-                </span>
-              </label>
-              <select
-                name="cuentaId"
-                value={filtros.cuentaId}
-                onChange={handleFiltroChange}
-                className="input input-bordered focus:input-primary"
-              >
-                <option value="">Seleccione una cuenta</option>
-                {transacciones.map((transaccion) => (
-                  <option key={transaccion.id} value={transaccion.cuenta?.id}>
-                    {transaccion.cuenta?.nombre || 'N/A'}
-                  </option>
-                ))}
-              </select> 
-            </div>
-
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text font-medium">
-                  <FiTag className="w-4 h-4 inline mr-1" />
-                  Categoría
-                </span>
-              </label>
-              {/* Transformar a OPTION con {transaccion.categoria?.nombre || 'N/A'} */}
-              <select
-                name="categoriaId"
-                value={filtros.categoriaId}
-                onChange={handleFiltroChange}
-                className="input input-bordered focus:input-primary"
-              >
-                <option value="">Seleccione una categoría</option>
-                {transacciones.map((transaccion) => (
-                  <option key={transaccion.id} value={transaccion.categoria?.id}>
-                    {transaccion.categoria?.nombre || 'N/A'}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text font-medium">Tipo Movimiento</span>
-              </label>
-              <select
-                name="tipoMovimientoId"
-                value={filtros.tipoMovimientoId}
-                onChange={handleFiltroChange}
-                className="input input-bordered focus:input-primary"
-              >
-                <option value="">Seleccione un tipo de movimiento</option>
-                {transacciones.map((transaccion) => (
-                  <option key={transaccion.id} value={transaccion.tipoMovimiento?.id}>
-                    {transaccion.tipoMovimiento?.nombre || 'N/A'}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-2 mt-6">
-            <button 
-              onClick={aplicarFiltros}
-              className="btn btn-primary gap-2"
-            >
-              <FiSearch className="w-4 h-4" />
-              Aplicar Filtros
-            </button>
-            <button 
-              onClick={limpiarFiltros}
-              className="btn btn-outline gap-2"
-            >
-              <FiRefreshCw className="w-4 h-4" />
-              Limpiar
-            </button>
-            <button 
-              onClick={() => cargarEstadisticas(filtros)}
-              className="btn btn-accent gap-2"
-            >
-              <TfiBarChart className="w-4 h-4" />
-              Estadísticas
-            </button>
-          </div>
+        
+        <div className="flex flex-wrap gap-2">
+          <button 
+            className="btn btn-primary btn-sm"
+            onClick={() => setVistaActual('crear')}
+          >
+            <FiPlus className="w-4 h-4" />
+            Nueva
+          </button>
+          <button 
+            className="btn btn-secondary btn-sm"
+            onClick={() => setVistaActual('resumen')}
+          >
+            <FiBarChart className="w-4 h-4" />
+            Resumen
+          </button>
+          <button 
+            className="btn btn-ghost btn-sm"
+            onClick={() => setMostrarFiltros(!mostrarFiltros)}
+          >
+            <FiFilter className="w-4 h-4" />
+            Filtros
+          </button>
         </div>
       </div>
 
-      {/* Loading */}
-      {loading && (
-        <Loader />
+      {/* Filtros */}
+      {mostrarFiltros && (
+        <div className="card bg-base-200 shadow-lg">
+          <div className="card-body">
+            <h3 className="card-title text-lg mb-4">
+              <FiSearch className="w-5 h-5" />
+              Filtros de Búsqueda
+            </h3>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">Límite</span>
+                </label>
+                <input
+                  type="number"
+                  className="input input-bordered input-sm"
+                  placeholder="50"
+                  value={filtros.limite}
+                  onChange={(e) => manejarCambioFiltro('limite', parseInt(e.target.value) || '')}
+                />
+              </div>
+              
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">Página</span>
+                </label>
+                <input
+                  type="number"
+                  className="input input-bordered input-sm"
+                  placeholder="1"
+                  value={filtros.pagina}
+                  onChange={(e) => manejarCambioFiltro('pagina', parseInt(e.target.value) || '')}
+                />
+              </div>
+              
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">Fecha inicio</span>
+                </label>
+                <input
+                  type="datetime-local"
+                  className="input input-bordered input-sm"
+                  value={filtros.fechaInicio}
+                  onChange={(e) => manejarCambioFiltro('fechaInicio', e.target.value)}
+                />
+              </div>
+              
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">Fecha fin</span>
+                </label>
+                <input
+                  type="datetime-local"
+                  className="input input-bordered input-sm"
+                  value={filtros.fechaFin}
+                  onChange={(e) => manejarCambioFiltro('fechaFin', e.target.value)}
+                />
+              </div>
+              
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">ID Cuenta</span>
+                </label>
+                <input
+                  type="number"
+                  className="input input-bordered input-sm"
+                  placeholder="ID Cuenta"
+                  value={filtros.cuentaId}
+                  onChange={(e) => manejarCambioFiltro('cuentaId', parseInt(e.target.value) || '')}
+                />
+              </div>
+              
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">ID Tipo Movimiento</span>
+                </label>
+                <input
+                  type="number"
+                  className="input input-bordered input-sm"
+                  placeholder="ID Tipo"
+                  value={filtros.tipoMovimientoId}
+                  onChange={(e) => manejarCambioFiltro('tipoMovimientoId', parseInt(e.target.value) || '')}
+                />
+              </div>
+              
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">Estado</span>
+                </label>
+                <select
+                  className="select select-bordered select-sm"
+                  value={filtros.confirmada}
+                  onChange={(e) => manejarCambioFiltro('confirmada', e.target.value === '' ? '' : e.target.value === 'true')}
+                >
+                  <option value="true">Confirmadas</option>
+                  <option value="false">No confirmadas</option>
+                </select>
+              </div>
+              
+              <div className="form-control justify-end">
+                <div className="flex gap-2">
+                  <button 
+                    className="btn btn-primary btn-sm"
+                    onClick={aplicarFiltros}
+                  >
+                    <FiSearch className="w-4 h-4" />
+                    Buscar
+                  </button>
+                  <button 
+                    className="btn btn-ghost btn-sm"
+                    onClick={limpiarFiltros}
+                  >
+                    <FiRefreshCw className="w-4 h-4" />
+                    Limpiar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
-      {/* Lista de Transacciones */}
-      <div className="card bg-base-100 shadow-xl mb-6">
-        <div className="card-body">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="card-title">
-              Transacciones
-              <div className="badge badge-primary badge-lg ml-2">{transacciones.length}</div>
-            </h3>
+      {/* Loading */}
+      {cargandoTransacciones && (
+        <div className="flex justify-center py-8">
+          <span className="loading loading-spinner loading-lg text-primary"></span>
+        </div>
+      )}
+      
+      {/* Lista de transacciones */}
+      {transacciones?.datos?.transacciones && (
+        <div className="space-y-4">
+          {/* Stats */}
+          <div className="stats stats-horizontal shadow bg-base-200 w-full">
+            <div className="stat">
+              <div className="stat-title">Total</div>
+              <div className="stat-value text-primary">{transacciones.datos.total}</div>
+            </div>
+            <div className="stat">
+              <div className="stat-title">Página</div>
+              <div className="stat-value text-secondary">{transacciones.datos.pagina}</div>
+              <div className="stat-desc">de {transacciones.datos.totalPaginas}</div>
+            </div>
+          </div>
+          
+          {/* Tabla para desktop */}
+          <div className="hidden lg:block">
+            <div className="overflow-x-auto">
+              <table className="table table-zebra bg-base-100">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Monto</th>
+                    <th>Descripción</th>
+                    <th>Fecha</th>
+                    <th>Cuenta</th>
+                    <th>Tipo</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {transacciones.datos.transacciones.map(txn => (
+                    <tr key={txn.id} className="hover">
+                      <td className="font-mono text-sm">{txn.id}</td>
+                      <td>
+                        <div className="flex items-center gap-1">
+                          <FiDollarSign className="w-4 h-4 text-success" />
+                          <span className="font-semibold">{txn.monto}</span>
+                        </div>
+                      </td>
+                      <td className="max-w-xs truncate">{txn.descripcion}</td>
+                      <td className="text-sm">{new Date(txn.fecha).toLocaleDateString()}</td>
+                      <td>
+                        <div className="badge badge-outline">{txn.cuenta?.nombre}</div>
+                      </td>
+                      <td>
+                        <div className={`badge ${txn.tipomovimiento?.nombre === 'Ingreso' ? 'badge-success' : 'badge-error'}`}>
+                          {txn.tipomovimiento?.nombre === 'Ingreso' ? <FiTrendingUp className="w-3 h-3 mr-1" /> : <FiTrendingDown className="w-3 h-3 mr-1" />}
+                          {txn.tipomovimiento?.nombre}
+                        </div>
+                      </td>
+                      <td>
+                        <input
+                          type="checkbox"
+                          className="checkbox checkbox-success checkbox-sm"
+                          checked={txn.confirmada}
+                          onChange={(e) => manejarCambioConfirmacion(txn.id, e.target.checked)}
+                          disabled={confirmandoTransaccion || desconfirmandoTransaccion}
+                        />
+                      </td>
+                      <td>
+                        <div className="flex gap-1">
+                          <button 
+                            className="btn btn-ghost btn-xs"
+                            onClick={() => verDetalle(txn.id)}
+                            title="Ver detalle"
+                          >
+                            <FiEye className="w-4 h-4" />
+                          </button>
+                          <button 
+                            className="btn btn-ghost btn-xs"
+                            onClick={() => editarTransaccion(txn)}
+                            title="Editar"
+                          >
+                            <FiEdit2 className="w-4 h-4" />
+                          </button>
+                          <button 
+                            className="btn btn-ghost btn-xs text-error"
+                            onClick={() => manejarEliminar(txn.id)}
+                            disabled={eliminandoTransaccion}
+                            title="Eliminar"
+                          >
+                            <FiTrash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          {transacciones.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-6xl mb-4">💰</div>
-              <p className="text-xl text-base-content/70 mb-2">No hay transacciones disponibles</p>
-              <p className="text-base-content/50">Comienza creando tu primera transacción</p>
-            </div>
-          ) : (
-            <>
-              {/* Vista Desktop - Tabla */}
-              <div className="hidden lg:block overflow-x-auto">
-                <table className="table table-zebra">
-                  <thead>
-                    <tr>
-                      <th className="font-bold">Fecha</th>
-                      <th className="font-bold">Descripción</th>
-                      <th className="font-bold">Monto</th>
-                      <th className="font-bold">Cuenta</th>
-                      <th className="font-bold">Categoría</th>
-                      <th className="font-bold">Tipo</th>
-                      <th className="font-bold text-center">Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {transacciones.map((transaccion) => (
-                      <tr key={transaccion.id} className="hover">
-                        <td>{formatearFecha(transaccion.fecha)}</td>
-                        <td>
-                          <div className="max-w-xs truncate" title={transaccion.descripcion}>
-                            {transaccion.descripcion || 'Sin descripción'}
-                          </div>
-                        </td>
-                        <td>
-                          <div className={`font-bold ${transaccion.monto >= 0 ? 'text-success' : 'text-error'}`}>
-                            {formatearMonto(transaccion.monto)}
-                          </div>
-                        </td>
-                        <td>
-                          <div className="flex items-center gap-2">
-                            <div 
-                              className="w-3 h-3 rounded-full" 
-                              style={{ backgroundColor: transaccion.cuenta?.color || '#gray' }}
-                            ></div>
-                            {transaccion.cuenta?.nombre || 'N/A'}
-                          </div>
-                        </td>
-                        <td>
-                          <div className="flex items-center gap-2">
-                            <span className="text-lg">{transaccion.categoria?.icono || '📝'}</span>
-                            {transaccion.categoria?.nombre || 'N/A'}
-                          </div>
-                        </td>
-                        <td>
-                          <div className="badge badge-outline">
-                            {transaccion.tipoMovimiento?.nombre || 'N/A'}
-                          </div>
-                        </td>
-                        <td>
-                          <div className="flex gap-1 justify-center">
-                            <button 
-                              onClick={() => abrirFormularioEditar(transaccion)}
-                              className="btn btn-ghost btn-sm text-info hover:bg-info hover:text-white"
-                              title="Editar"
-                            >
-                              <FiEdit3 className="w-4 h-4" />
-                            </button>
-                            <button 
-                              onClick={() => confirmarEliminacion(transaccion)}
-                              className="btn btn-ghost btn-sm text-error hover:bg-error hover:text-white"
-                              title="Eliminar"
-                            >
-                              <FiTrash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+          {/* Cards para mobile */}
+          <div className="lg:hidden space-y-3">
+            {transacciones.datos.transacciones.map(txn => (
+              <div key={txn.id} className="card bg-base-100 shadow-sm border">
+                <div className="card-body p-4">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <FiDollarSign className="w-5 h-5 text-success" />
+                        <span className="text-xl font-bold">{txn.monto}</span>
+                        <div className={`badge badge-sm ${txn.tipomovimiento?.nombre === 'Ingreso' ? 'badge-success' : 'badge-error'}`}>
+                          {txn.tipomovimiento?.nombre}
+                        </div>
+                      </div>
+                      
+                      <p className="text-sm text-base-content/70 mb-1">{txn.descripcion}</p>
+                      <p className="text-xs text-base-content/50">{new Date(txn.fecha).toLocaleDateString()}</p>
+                      <div className="badge badge-outline badge-sm mt-1">{txn.cuenta?.nombre}</div>
+                    </div>
+                    
+                    <div className="flex flex-col items-end gap-2">
+                      <input
+                        type="checkbox"
+                        className="checkbox checkbox-success checkbox-sm"
+                        checked={txn.confirmada}
+                        onChange={(e) => manejarCambioConfirmacion(txn.id, e.target.checked)}
+                      />
+                      
+                      <div className="flex gap-1">
+                        <button className="btn btn-ghost btn-xs" onClick={() => verDetalle(txn.id)}>
+                          <FiEye className="w-4 h-4" />
+                        </button>
+                        <button className="btn btn-ghost btn-xs" onClick={() => editarTransaccion(txn)}>
+                          <FiEdit2 className="w-4 h-4" />
+                        </button>
+                        <button className="btn btn-ghost btn-xs text-error" onClick={() => manejarEliminar(txn.id)}>
+                          <FiTrash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
+            ))}
+          </div>
 
-              {/* Vista Mobile - Cards */}
-              <div className="lg:hidden space-y-4">
-                {transacciones.map((transaccion) => (
-                  <div key={transaccion.id} className="card bg-base-200 shadow-md">
+          {/* Paginación */}
+          <div className="flex justify-center">
+            <div className="join">
+              <button 
+                className="join-item btn btn-sm"
+                onClick={() => {
+                  if (filtros.pagina > 1) {
+                    manejarCambioFiltro('pagina', filtros.pagina - 1);
+                    aplicarFiltros();
+                  }
+                }}
+                disabled={filtros.pagina <= 1}
+              >
+                <FiChevronLeft className="w-4 h-4" />
+              </button>
+              <button className="join-item btn btn-sm btn-active">
+                {filtros.pagina}
+              </button>
+              <button 
+                className="join-item btn btn-sm"
+                onClick={() => {
+                  if (filtros.pagina < transacciones.datos.totalPaginas) {
+                    manejarCambioFiltro('pagina', filtros.pagina + 1);
+                    aplicarFiltros();
+                  }
+                }}
+                disabled={filtros.pagina >= transacciones.datos.totalPaginas}
+              >
+                <FiChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  // Renderizado de formulario (crear/editar)
+  const renderFormulario = () => (
+    <div className="max-w-2xl mx-auto">
+      <div className="card bg-base-100 shadow-lg">
+        <div className="card-body">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="card-title text-2xl">
+              {vistaActual === 'crear' ? (
+                <>
+                  <FiPlus className="w-6 h-6 text-primary" />
+                  Nueva Transacción
+                </>
+              ) : (
+                <>
+                  <FiEdit2 className="w-6 h-6 text-secondary" />
+                  Editar Transacción
+                </>
+              )}
+            </h2>
+            <button 
+              className="btn btn-ghost btn-sm"
+              onClick={() => { setVistaActual('lista'); limpiarFormulario(); }}
+            >
+              <FiX className="w-4 h-4" />
+            </button>
+          </div>
+          
+          <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">Monto *</span>
+                </label>
+                <label className="input-group">
+                  <span><FiDollarSign className="w-4 h-4" /></span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="input input-bordered flex-1"
+                    placeholder="0.00"
+                    value={datosFormulario.monto}
+                    onChange={(e) => manejarCambioFormulario('monto', e.target.value)}
+                    required
+                  />
+                </label>
+              </div>
+              
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">Fecha y Hora</span>
+                </label>
+                <label className="input-group">
+                  <span><FiCalendar className="w-4 h-4" /></span>
+                  <input
+                    type="datetime-local"
+                    className="input input-bordered flex-1"
+                    value={datosFormulario.fecha}
+                    onChange={(e) => manejarCambioFormulario('fecha', e.target.value)}
+                  />
+                </label>
+              </div>
+            </div>
+            
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text">Descripción</span>
+              </label>
+              <input
+                type="text"
+                className="input input-bordered"
+                placeholder="Descripción de la transacción"
+                value={datosFormulario.descripcion}
+                onChange={(e) => manejarCambioFormulario('descripcion', e.target.value)}
+              />
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">ID Cuenta *</span>
+                </label>
+                <input
+                  type="number"
+                  className="input input-bordered"
+                  placeholder="1"
+                  value={datosFormulario.cuentaId}
+                  onChange={(e) => manejarCambioFormulario('cuentaId', parseInt(e.target.value) || '')}
+                  required
+                />
+              </div>
+              
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">ID Tipo Movimiento *</span>
+                </label>
+                <input
+                  type="number"
+                  className="input input-bordered"
+                  placeholder="1"
+                  value={datosFormulario.tipoMovimientoId}
+                  onChange={(e) => manejarCambioFormulario('tipoMovimientoId', parseInt(e.target.value) || '')}
+                  required
+                />
+              </div>
+              
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">ID Tipo Pago</span>
+                </label>
+                <input
+                  type="number"
+                  className="input input-bordered"
+                  placeholder="Opcional"
+                  value={datosFormulario.tipoPagoId}
+                  onChange={(e) => manejarCambioFormulario('tipoPagoId', parseInt(e.target.value) || '')}
+                />
+              </div>
+            </div>
+            
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text">ID Categoría Usuario *</span>
+              </label>
+              <input
+                type="number"
+                className="input input-bordered"
+                placeholder="1"
+                value={datosFormulario.usuarioCategoriaId}
+                onChange={(e) => manejarCambioFormulario('usuarioCategoriaId', parseInt(e.target.value) || '')}
+                required
+              />
+            </div>
+            
+            <div className="form-control">
+              <label className="label cursor-pointer justify-start gap-2">
+                <input
+                  type="checkbox"
+                  className="checkbox checkbox-success"
+                  checked={datosFormulario.confirmada}
+                  onChange={(e) => manejarCambioFormulario('confirmada', e.target.checked)}
+                />
+                <span className="label-text">Transacción confirmada</span>
+              </label>
+            </div>
+            
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text">Notas</span>
+              </label>
+              <textarea
+                className="textarea textarea-bordered h-24"
+                placeholder="Notas adicionales..."
+                value={datosFormulario.notas}
+                onChange={(e) => manejarCambioFormulario('notas', e.target.value)}
+              />
+            </div>
+            
+            <div className="card-actions justify-end pt-4">
+              <button 
+                className="btn btn-ghost"
+                onClick={() => { setVistaActual('lista'); limpiarFormulario(); }}
+              >
+                Cancelar
+              </button>
+              <button 
+                className={`btn ${vistaActual === 'crear' ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={vistaActual === 'crear' ? manejarCrear : manejarActualizar}
+                disabled={creandoTransaccion || actualizandoTransaccion}
+              >
+                {(creandoTransaccion || actualizandoTransaccion) && (
+                  <span className="loading loading-spinner loading-sm"></span>
+                )}
+                <FiCheck className="w-4 h-4" />
+                {vistaActual === 'crear' ? 'Crear' : 'Actualizar'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Renderizado de detalle
+  const renderDetalle = () => (
+    <div className="min-h-screen bg-base-200 p-6">
+      <div className="max-w-4xl mx-auto">
+        <div className="card bg-base-100 shadow-xl">
+          <div className="card-body">
+            <div className="flex items-center gap-3 mb-6">
+              <FaFileAlt className="text-2xl text-primary" />
+              <h2 className="card-title text-2xl">Detalle de Transacción</h2>
+            </div>
+            
+            {cargandoTransaccion && (
+              <div className="flex justify-center items-center py-8">
+                <span className="loading loading-spinner loading-lg text-primary"></span>
+              </div>
+            )}
+            
+            {transaccion?.datos && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text font-semibold">ID</span>
+                    </label>
+                    <div className="input input-bordered bg-base-200 flex items-center">
+                      {transaccion.datos.id}
+                    </div>
+                  </div>
+                  
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text font-semibold flex items-center gap-2">
+                        <FaMoneyBillWave /> Monto
+                      </span>
+                    </label>
+                    <div className="input input-bordered bg-base-200 flex items-center">
+                      {transaccion.datos.monto}
+                    </div>
+                  </div>
+                  
+                  <div className="form-control md:col-span-2">
+                    <label className="label">
+                      <span className="label-text font-semibold">Descripción</span>
+                    </label>
+                    <div className="textarea textarea-bordered bg-base-200 min-h-[60px] flex items-center">
+                      {transaccion.datos.descripcion}
+                    </div>
+                  </div>
+                  
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text font-semibold flex items-center gap-2">
+                        <FaCalendarAlt /> Fecha
+                      </span>
+                    </label>
+                    <div className="input input-bordered bg-base-200 flex items-center">
+                      {new Date(transaccion.datos.fecha).toLocaleString()}
+                    </div>
+                  </div>
+                  
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text font-semibold">Cuenta</span>
+                    </label>
+                    <div className="input input-bordered bg-base-200 flex items-center">
+                      {transaccion.datos.cuenta?.nombre}
+                    </div>
+                  </div>
+                  
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text font-semibold">Tipo Movimiento</span>
+                    </label>
+                    <div className="input input-bordered bg-base-200 flex items-center">
+                      {transaccion.datos.tipomovimiento?.nombre}
+                    </div>
+                  </div>
+                  
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text font-semibold flex items-center gap-2">
+                        <FaCreditCard /> Tipo Pago
+                      </span>
+                    </label>
+                    <div className="input input-bordered bg-base-200 flex items-center">
+                      {transaccion.datos.tipopago?.nombre || 'N/A'}
+                    </div>
+                  </div>
+                  
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text font-semibold">Categoría</span>
+                    </label>
+                    <div className="input input-bordered bg-base-200 flex items-center">
+                      {transaccion.datos.usuariocategoria?.categoriabase?.nombre}
+                    </div>
+                  </div>
+                  
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text font-semibold">Confirmada</span>
+                    </label>
+                    <div className="input input-bordered bg-base-200 flex items-center gap-2">
+                      {transaccion.datos.confirmada ? (
+                        <>
+                          <FaCheckCircle className="text-success" />
+                          <span>Sí</span>
+                        </>
+                      ) : (
+                        <>
+                          <FaTimesCircle className="text-error" />
+                          <span>No</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                    
+                  <div className="form-control md:col-span-2">
+                    <label className="label">
+                      <span className="label-text font-semibold">Notas</span>
+                    </label>
+                    <div className="textarea textarea-bordered bg-base-200 min-h-[80px] flex items-start pt-3">
+                      {transaccion.datos.notas || 'N/A'}
+                    </div>
+                  </div>
+                </div>
+                    
+                {/* Etiquetas */}
+                <div className="divider"></div>
+                <div>
+                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <FaTag className="text-primary" />
+                    Etiquetas
+                  </h3>
+                    
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {transaccion.datos.etiquetaontransaccion?.map(item => (
+                      <div key={item.etiqueta.id} className="badge badge-primary badge-lg gap-2">
+                        <FaTag />
+                        {item.etiqueta.nombre}
+                        <button 
+                          className="btn btn-ghost btn-xs hover:btn-error"
+                          onClick={() => manejarRemoverEtiquetas(transaccion.datos.id, [item.etiqueta.id])}
+                        >
+                          <FaTimes />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Agregar etiquetas */}
+                  <div className="card bg-base-200">
                     <div className="card-body p-4">
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex items-center gap-2">
-                          <div className="text-sm text-base-content/70">
-                            {formatearFecha(transaccion.fecha)}
-                          </div>
-                        </div>
-                        <div className={`font-bold text-lg ${transaccion.monto >= 0 ? 'text-success' : 'text-error'}`}>
-                          {formatearMonto(transaccion.monto)}
-                        </div>
+                      <h4 className="font-medium mb-3">Agregar Etiquetas</h4>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          className="input input-bordered flex-1"
+                          placeholder="IDs de etiquetas (separados por coma)"
+                          onChange={(e) => {
+                            const ids = e.target.value.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+                            setEtiquetasSeleccionadas(ids);
+                          }}
+                        />
+                        <button 
+                          className="btn btn-primary"
+                          onClick={() => manejarAgregarEtiquetas(transaccion.datos.id)}
+                        >
+                          <FaPlus />
+                          Agregar
+                        </button>
                       </div>
-
-                      <div className="mb-3">
-                        <p className="font-medium text-base-content">
-                          {transaccion.descripcion || 'Sin descripción'}
-                        </p>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2 text-sm mb-4">
-                        <div className="flex items-center gap-2">
-                          <div 
-                            className="w-3 h-3 rounded-full" 
-                            style={{ backgroundColor: transaccion.cuenta?.color || '#gray' }}
-                          ></div>
-                          <span className="truncate">{transaccion.cuenta?.nombre || 'N/A'}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            <div className="card-actions justify-start mt-6">
+              <button 
+                className="btn btn-ghost gap-2"
+                onClick={() => setVistaActual('lista')}
+              >
+                <FaArrowLeft />
+                Volver
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+  
+  // Renderizado de resumen
+  const renderResumen = () => (
+    <div className="min-h-screen bg-base-200 p-6">
+      <div className="max-w-4xl mx-auto">
+        <div className="card bg-base-100 shadow-xl">
+          <div className="card-body">
+            <div className="flex items-center gap-3 mb-6">
+              <FaChartBar className="text-2xl text-primary" />
+              <h2 className="card-title text-2xl">Resumen de Transacciones</h2>
+            </div>
+            
+            <div className="card bg-base-200 mb-6">
+              <div className="card-body p-4">
+                <h3 className="font-medium mb-4">Filtros de Fecha</h3>
+                <div className="flex gap-4 flex-wrap">
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text">Fecha Inicio</span>
+                    </label>
+                    <input
+                      type="date"
+                      className="input input-bordered"
+                      value={filtrosResumen.fechaInicio}
+                      onChange={(e) => setFiltrosResumen(prev => ({ ...prev, fechaInicio: e.target.value }))}
+                    />
+                  </div>
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text">Fecha Fin</span>
+                    </label>
+                    <input
+                      type="date"
+                      className="input input-bordered"
+                      value={filtrosResumen.fechaFin}
+                      onChange={(e) => setFiltrosResumen(prev => ({ ...prev, fechaFin: e.target.value }))}
+                    />
+                  </div>
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text opacity-0">Action</span>
+                    </label>
+                    <button 
+                      className="btn btn-primary"
+                      onClick={manejarObtenerResumen}
+                    >
+                      <FaChartBar />
+                      Obtener Resumen
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {cargandoResumen && (
+              <div className="flex justify-center items-center py-8">
+                <span className="loading loading-spinner loading-lg text-primary"></span>
+              </div>
+            )}
+            
+            {resumen?.datos && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                {resumen.datos.map(item => (
+                  <div key={item.tipoMovimiento.id} className="card bg-base-200 border border-base-300">
+                    <div className="card-body">
+                      <h3 className="card-title text-lg flex items-center gap-2">
+                        <FaMoneyBillWave className="text-primary" />
+                        {item.tipoMovimiento.nombre}
+                      </h3>
+                      <div className="space-y-2">
+                        <div className="stat">
+                          <div className="stat-title">Total Monto</div>
+                          <div className="stat-value text-2xl text-primary">{item.totalMonto}</div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span>{transaccion.categoria?.icono || '📝'}</span>
-                          <span className="truncate">{transaccion.categoria?.nombre || 'N/A'}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex justify-between items-center">
-                        <div className="badge badge-outline">
-                          {transaccion.tipoMovimiento?.nombre || 'N/A'}
-                        </div>
-                        <div className="flex gap-2">
-                          <button 
-                            onClick={() => abrirFormularioEditar(transaccion)}
-                            className="btn btn-sm btn-info gap-1"
-                          >
-                            <FiEdit3 className="w-3 h-3" />
-                            Editar
-                          </button>
-                          <button 
-                            onClick={() => confirmarEliminacion(transaccion)}
-                            className="btn btn-sm btn-error gap-1"
-                          >
-                            <FiTrash2 className="w-3 h-3" />
-                            Eliminar
-                          </button>
+                        <div className="stat">
+                          <div className="stat-title">Total Transacciones</div>
+                          <div className="stat-value text-xl text-secondary">{item.totalTransacciones}</div>
                         </div>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
-            </>
-          )}
+            )}
+            
+            <div className="card-actions justify-start">
+              <button 
+                className="btn btn-ghost gap-2"
+                onClick={() => setVistaActual('lista')}
+              >
+                <FaArrowLeft />
+                Volver
+              </button>
+            </div>
+          </div>
         </div>
       </div>
+    </div>
+  );
 
-      {/* Estadísticas */}
-      {estadisticas && (
-        <div className="card bg-base-100 shadow-xl mb-6">
-          <div className="card-body">
-            <div className="flex items-center gap-2 mb-4">
-              <TfiBarChart className="w-5 h-5 text-accent" />
-              <h3 className="card-title">Estadísticas</h3>
-            </div>
-            <div className="mockup-code">
-              <pre><code>{JSON.stringify(estadisticas, null, 2)}</code></pre>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal Formulario */}
-      {mostrarFormulario && (
-        <div className="modal modal-open">
-          <div className="modal-box w-11/12 max-w-2xl">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="font-bold text-xl">
-                {transaccionEditando ? 'Editar Transacción' : 'Nueva Transacción'}
-              </h3>
-              <button 
-                onClick={() => setMostrarFormulario(false)}
-                className="btn btn-sm btn-circle btn-ghost"
-              >
-                <FiX className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text font-medium">
-                    <FiDollarSign className="w-4 h-4 inline mr-1" />
-                    Monto *
-                  </span>
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  name="monto"
-                  value={formData.monto}
-                  onChange={handleFormChange}
-                  required
-                  className="input input-bordered focus:input-primary"
-                  placeholder="0.00"
-                />
-              </div>
-
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text font-medium">
-                    <FiCalendar className="w-4 h-4 inline mr-1" />
-                    Fecha *
-                  </span>
-                </label>
-                <input
-                  type="date"
-                  name="fecha"
-                  value={formData.fecha}
-                  onChange={handleFormChange}
-                  required
-                  className="input input-bordered focus:input-primary"
-                />
-              </div>
-
-              <div className="form-control md:col-span-2">
-                <label className="label">
-                  <span className="label-text font-medium">Descripción</span>
-                </label>
-                <input
-                  type="text"
-                  name="descripcion"
-                  value={formData.descripcion}
-                  onChange={handleFormChange}
-                  className="input input-bordered focus:input-primary"
-                  placeholder="Descripción de la transacción..."
-                />
-              </div>
-
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text font-medium">
-                    <FiCreditCard className="w-4 h-4 inline mr-1" />
-                    Cuenta *
-                  </span>
-                </label>
-                {/* Transformar a OPTION con useCuenta */}
-                <select
-                  name="cuentaId"
-                  value={formData.cuentaId}
-                  onChange={handleFormChange}
-                  required
-                  className="input input-bordered focus:input-primary"
-                >
-                  <option value="">Seleccione una cuenta</option>
-                  {cuentas.map((cuenta) => (
-                    <option key={cuenta.id} value={cuenta.id}>
-                      {cuenta.nombre}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text font-medium">
-                    <FiTag className="w-4 h-4 inline mr-1" />
-                    Categoría *
-                  </span>
-                </label>
-                {/* Arreglar Categoria */}
-                <select
-                  name="categoriaId"
-                  value={formData.categoriaId}
-                  onChange={handleFormChange}
-                  required
-                  className="input input-bordered focus:input-primary"
-                >
-                  <option value="">Seleccione una categoría</option>
-                  {categorias.map((categoria) => (
-                    <option key={categoria.id} value={categoria.id}>
-                      {categoria.nombre}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  type="number"
-                  name="categoriaId"
-                  value={formData.categoriaId}
-                  onChange={handleFormChange}
-                  required
-                  className="input input-bordered focus:input-primary"
-                  placeholder="ID de categoría"
-                />
-              </div>
-
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text font-medium">Tipo Movimiento ID *</span>
-                </label>
-                <select
-                  name="tipoMovimientoId"
-                  value={formData.tipoMovimientoId}
-                  onChange={handleFormChange}
-                  required
-                  className="input input-bordered focus:input-primary"
-                >
-                  <option value="">Seleccione un tipo de movimiento</option>
-                  {tiposMovimiento.map((tipo) => (
-                    <option key={tipo.id} value={tipo.id}>
-                      {tipo.nombre}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text font-medium">Tipo Pago ID</span>
-                </label>
-                <input
-                  type="number"
-                  name="tipoPagoId"
-                  value={formData.tipoPagoId}
-                  onChange={handleFormChange}
-                  className="input input-bordered focus:input-primary"
-                  placeholder="ID tipo pago (opcional)"
-                />
-              </div>
-
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text font-medium">Plantilla</span>
-                </label>
-                {/* SIMPLIFICAR */}
-                <select
-                  name="plantillaId"
-                  value={formData.plantillaId}
-                  onChange={handleFormChange}
-                  className="input input-bordered focus:input-primary"
-                >
-                  <option value="">Seleccione una plantilla</option>
-                  {transacciones.map((transaccion) => (
-                    <option key={transaccion.id} value={transaccion.plantillaId}>
-                      {transaccion.plantilla?.nombre || 'N/A'}
-                    </option>
-                  ))}
-                  <option value=""> null</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="modal-action mt-6">
-              <button 
-                onClick={() => setMostrarFormulario(false)}
-                className="btn btn-outline"
-              >
-                Cancelar
-              </button>
-              <button 
-                onClick={guardarTransaccion}
-                className="btn btn-primary gap-2"
-              >
-                <FiPlus className="w-4 h-4" />
-                {transaccionEditando ? 'Actualizar' : 'Crear'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+  // Renderizado principal
+  return (
+    <div>
+      {vistaActual === 'lista' && renderLista()}
+      {(vistaActual === 'crear' || vistaActual === 'editar') && renderFormulario()}
+      {vistaActual === 'detalle' && renderDetalle()}
+      {vistaActual === 'resumen' && renderResumen()}
     </div>
   );
 };
