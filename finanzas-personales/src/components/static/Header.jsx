@@ -58,7 +58,7 @@ const Header = () => {
         </div>
 
         {/* Espaciador central o más adelante nav-links */}
-        <div className="navbar-center hidden lg:flex">
+        <div className="navbar-center hidden">
           {/* Puedes agregar enlaces aquí más adelante */}
         </div>
 
