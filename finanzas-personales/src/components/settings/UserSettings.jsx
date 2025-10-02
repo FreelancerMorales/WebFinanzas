@@ -218,6 +218,7 @@ const UserSettings = () => {
                           ) : (
                             <FaUser className="text-2xl text-white" />
                           )}
+                          { console.log("foto: ", perfil.datos?.foto)}
                         </div>
                       </div>
                       <div className="flex-1">

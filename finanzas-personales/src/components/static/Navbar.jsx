@@ -15,6 +15,7 @@ const Navbar = () => {
     { to: '/history', label: 'Historial', icon: <FaHistory /> },
     { to: '/report', label: 'Reportes', icon: <FaChartPie /> },
     { to: '/goals', label: 'Metas', icon: <FaBullseye /> },
+    { to: '/categorias', label: 'Categorías', icon: <FaPlusCircle /> },
     { to: '/settings', label: 'Config.', icon: <FaCog /> },
   ];
 
