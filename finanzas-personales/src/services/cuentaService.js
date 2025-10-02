@@ -1,27 +1,35 @@
 import api from './api';
 
-export const cuentaService = {
-  // Obtener todas las cuentas
-  obtenerCuentas: () => api.get('/cuentas'),
-  
-  // Obtener cuenta por ID
-  obtenerCuentaPorId: (id) => api.get(`/cuentas/${id}`),
-  
-  // Obtener saldo de cuenta
-  obtenerSaldoCuenta: (id) => api.get(`/cuentas/${id}/saldo`),
-  
-  // Obtener resumen de cuenta
-  obtenerResumenCuenta: (id) => api.get(`/cuentas/${id}/resumen`),
-  
-  // Crear cuenta
-  crearCuenta: (datos) => api.post('/cuentas', datos),
-  
-  // Actualizar cuenta
-  actualizarCuenta: (id, datos) => api.put(`/cuentas/${id}`, datos),
-  
-  // Eliminar cuenta
-  eliminarCuenta: (id) => api.delete(`/cuentas/${id}`),
-  
-  // Reactivar cuenta
-  reactivarCuenta: (id) => api.put(`/cuentas/${id}/reactivar`)
+const cuentasService = {
+  // POST /cuentas - Crear nueva cuenta
+  crear: (datos) => api.post('/cuentas', datos),
+
+  // GET /cuentas - Obtener todas las cuentas del usuario
+  obtenerTodas: (params = {}) => {
+    const queryParams = new URLSearchParams();
+    
+    if (params.activo !== undefined) {
+      queryParams.append('activo', params.activo);
+    }
+    
+    const query = queryParams.toString();
+    return api.get(`/cuentas${query ? `?${query}` : ''}`);
+  },
+
+  // GET /cuentas/:id - Obtener cuenta por ID
+  obtenerPorId: (id) => api.get(`/cuentas/${id}`),
+
+  // PUT /cuentas/:id - Actualizar cuenta
+  actualizar: (id, datos) => api.put(`/cuentas/${id}`, datos),
+
+  // DELETE /cuentas/:id - Eliminar cuenta (soft delete)
+  eliminar: (id) => api.delete(`/cuentas/${id}`),
+
+  // GET /cuentas/resumen - Obtener resumen de cuentas
+  obtenerResumen: () => api.get('/cuentas/resumen'),
+
+  // PATCH /cuentas/orden - Actualizar orden de cuentas
+  actualizarOrden: (ordenCuentas) => api.patch('/cuentas/orden', { ordenCuentas }),
 };
+
+export default cuentasService;
