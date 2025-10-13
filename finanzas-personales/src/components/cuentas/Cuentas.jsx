@@ -33,11 +33,10 @@ const Cuentas = () => {
     resumen,
     cargandoResumen,
     obtenerResumen,
-
-    // Orden
-    actualizarOrden,
-    actualizandoOrden,
   } = useCuentas();
+
+  console.log(cuentas);
+  
 
   // Estados locales para filtros y formularios
   const [filtroActivo, setFiltroActivo] = useState(undefined);

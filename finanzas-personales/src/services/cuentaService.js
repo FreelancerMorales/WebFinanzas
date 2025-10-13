@@ -29,7 +29,7 @@ const cuentasService = {
   obtenerResumen: () => api.get('/cuentas/resumen'),
 
   // PATCH /cuentas/orden - Actualizar orden de cuentas
-  actualizarOrden: (ordenCuentas) => api.patch('/cuentas/orden', { ordenCuentas }),
+  // actualizarOrden: (ordenCuentas) => api.patch('/cuentas/orden', { ordenCuentas }),
 };
 
 export default cuentasService;

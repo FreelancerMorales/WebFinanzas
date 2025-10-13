@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useTransacciones } from '../../hooks/useTransacciones';
+import { useCuentas } from '../../hooks/useCuentas';
+import { useCategorias } from '../../hooks/useCategorias';
+import { useTipoPago } from '../../hooks/useTipoPago';
+import { format, formatISO, parseISO } from 'date-fns';
 
 import { 
   FiPlus, FiEdit2, FiTrash2, FiEye, FiFilter, FiRefreshCw, 
@@ -23,6 +27,30 @@ import {
 } from 'react-icons/fa';
 
 const Transacciones = () => {
+
+  const { cuentas, obtenerTodas: obtenerTodasCuentas } = useCuentas();
+  const { categoriasUsuario, obtenerCategoriasUsuario, tiposMovimiento, obtenerTiposMovimiento } = useCategorias();
+  const { tiposPago, obtenerTiposPago } = useTipoPago();
+
+  useEffect(() => {
+    obtenerTodasCuentas({ activo: true }); // Con filtro
+    // o
+    obtenerTodasCuentas(); // Sin filtro
+    obtenerTiposMovimiento();
+    obtenerCategoriasUsuario();
+    obtenerTiposPago();
+  }, []);
+
+  const listaCuentas = cuentas?.datos || [];
+  const listaTiposMovimiento = tiposMovimiento?.datos || [];
+  const listaCategoriasUsuario = categoriasUsuario?.datos || [];
+  const listaTiposPago = tiposPago;
+
+  console.log('listaCuentas', listaCuentas);
+  console.log('listaTiposMovimiento', listaTiposMovimiento);
+  console.log('listaCategoriasUsuario', listaCategoriasUsuario);
+  console.log('listaTiposPago', listaTiposPago);
+
   const {
     // Datos
     transacciones,
@@ -74,7 +102,7 @@ const Transacciones = () => {
   const [datosFormulario, setDatosFormulario] = useState({
     monto: '',
     descripcion: '',
-    fecha: new Date().toISOString().slice(0, 16),
+    fecha: new Date().toISOString(),
     cuentaId: '',
     tipoMovimientoId: '',
     tipoPagoId: '',
@@ -175,7 +203,7 @@ const Transacciones = () => {
     setDatosFormulario({
       monto: transaccionData.monto,
       descripcion: transaccionData.descripcion || '',
-      fecha: transaccionData.fecha.slice(0, 16),
+      fecha: transaccionData.fecha,
       cuentaId: transaccionData.cuenta.id,
       tipoMovimientoId: transaccionData.tipomovimiento.id,
       tipoPagoId: transaccionData.tipopago?.id || '',
@@ -240,7 +268,7 @@ const Transacciones = () => {
     setDatosFormulario({
       monto: '',
       descripcion: '',
-      fecha: new Date().toISOString().slice(0, 16),
+      fecha: new Date().toISOString(),
       cuentaId: '',
       tipoMovimientoId: '',
       tipoPagoId: '',
@@ -348,28 +376,38 @@ const Transacciones = () => {
               
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text">ID Cuenta</span>
+                  <span className="label-text">Cuenta</span>
                 </label>
-                <input
-                  type="number"
-                  className="input input-bordered input-sm"
-                  placeholder="ID Cuenta"
+                <select 
+                  className="select select-bordered w-full mt-2"
                   value={filtros.cuentaId}
-                  onChange={(e) => manejarCambioFiltro('cuentaId', parseInt(e.target.value) || '')}
-                />
+                  onChange={(e) => manejarCambioFiltro('cuentaId', e.target.value)}
+                >
+                  <option value="">Todas las cuentas</option>
+                  {listaCuentas.map(cuenta => (
+                    <option key={cuenta.id} value={cuenta.id}>
+                      {cuenta.nombre} ({cuenta.tipo})
+                    </option>
+                  ))}
+                </select>
               </div>
               
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text">ID Tipo Movimiento</span>
+                  <span className="label-text">Tipo Movimiento</span>
                 </label>
-                <input
-                  type="number"
-                  className="input input-bordered input-sm"
-                  placeholder="ID Tipo"
+                <select
+                  className="select select-bordered w-full mt-2"
                   value={filtros.tipoMovimientoId}
-                  onChange={(e) => manejarCambioFiltro('tipoMovimientoId', parseInt(e.target.value) || '')}
-                />
+                  onChange={(e) => manejarCambioFiltro('tipoMovimientoId', e.target.value)}
+                >
+                  <option value="">Todos los tipos</option>
+                  {listaTiposMovimiento.map(tipo => (
+                    <option key={tipo.id} value={tipo.id}>
+                      {tipo.nombre}
+                    </option>
+                  ))}
+                </select>
               </div>
               
               <div className="form-control">
@@ -650,8 +688,18 @@ const Transacciones = () => {
                   <input
                     type="datetime-local"
                     className="input input-bordered flex-1"
-                    value={datosFormulario.fecha}
-                    onChange={(e) => manejarCambioFormulario('fecha', e.target.value)}
+                    // MOSTRAR: Convertir de ISO a formato datetime-local (sin zona horaria)
+                    value={
+                      datosFormulario.fecha 
+                        ? format(new Date(datosFormulario.fecha), "yyyy-MM-dd'T'HH:mm")
+                        : ''
+                    }
+                    // GUARDAR: Convertir de datetime-local a Date object
+                    onChange={(e) => {
+                      const fechaLocal = new Date(e.target.value);
+                      // Guardar como Date object en el estado
+                      manejarCambioFormulario('fecha', fechaLocal);
+                    }}
                   />
                 </label>
               </div>
@@ -673,58 +721,88 @@ const Transacciones = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text">ID Cuenta *</span>
+                  <span className="label-text">Cuenta *</span>
                 </label>
-                <input
-                  type="number"
-                  className="input input-bordered"
-                  placeholder="1"
+                <select
+                  id="cuentaId"
+                  name="cuentaId"
                   value={datosFormulario.cuentaId}
                   onChange={(e) => manejarCambioFormulario('cuentaId', parseInt(e.target.value) || '')}
                   required
-                />
+                  className="select select-bordered w-full mt-2"
+                >
+                  <option value="">-- Seleccione una cuenta --</option>
+                  {listaCuentas.map((cuenta) => (
+                    <option key={cuenta.id} value={cuenta.id}>
+                      {cuenta.nombre} - {cuenta.tipoCuenta} 
+                      {cuenta.saldo && ` (${cuenta.moneda} ${cuenta.saldo})`}
+                    </option>
+                  ))}
+                </select>
               </div>
               
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text">ID Tipo Movimiento *</span>
+                  <span className="label-text">Tipo Movimiento *</span>
                 </label>
-                <input
-                  type="number"
-                  className="input input-bordered"
-                  placeholder="1"
+                {/* Cambio a Select */}
+                <select
+                  id="tipoMovimientoId"
+                  name="tipoMovimientoId"
                   value={datosFormulario.tipoMovimientoId}
                   onChange={(e) => manejarCambioFormulario('tipoMovimientoId', parseInt(e.target.value) || '')}
                   required
-                />
+                  className="select select-bordered w-full mt-2"
+                >
+                  <option value="">-- Seleccione un tipo de movimiento --</option>
+                  {listaTiposMovimiento.map((tipo) => (
+                    <option key={tipo.id} value={tipo.id}>
+                      {tipo.nombre}
+                    </option>
+                  ))}
+                </select>
               </div>
               
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text">ID Tipo Pago</span>
+                  <span className="label-text">Tipo Pago</span>
                 </label>
-                <input
-                  type="number"
-                  className="input input-bordered"
-                  placeholder="Opcional"
+                <select
+                  id="tipoPagoId"
+                  name="tipoPagoId"
                   value={datosFormulario.tipoPagoId}
                   onChange={(e) => manejarCambioFormulario('tipoPagoId', parseInt(e.target.value) || '')}
-                />
+                  className="select select-bordered w-full mt-2"
+                >
+                  <option value="">-- Seleccione un tipo de pago --</option>
+                  {listaTiposPago.map((tipo) => (
+                    <option key={tipo.id} value={tipo.id}>
+                      {tipo.nombre}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
             
             <div className="form-control">
               <label className="label">
-                <span className="label-text">ID Categoría Usuario *</span>
+                <span className="label-text">Categoría *</span>
               </label>
-              <input
-                type="number"
-                className="input input-bordered"
-                placeholder="1"
+              <select
+                id="usuarioCategoriaId"
+                name="usuarioCategoriaId"
                 value={datosFormulario.usuarioCategoriaId}
                 onChange={(e) => manejarCambioFormulario('usuarioCategoriaId', parseInt(e.target.value) || '')}
                 required
-              />
+                className="select select-bordered w-full mt-2"
+              >
+                <option value="">-- Seleccione una categoría --</option>
+                {listaCategoriasUsuario.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.categoriabase.nombre}
+                  </option>
+                ))}
+              </select>
             </div>
             
             <div className="form-control">

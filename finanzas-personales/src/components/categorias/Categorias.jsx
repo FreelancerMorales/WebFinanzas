@@ -85,6 +85,8 @@ const Categorias = () => {
     }
   }, [vistaActual, tipoMovimientoFiltro, obtenerCategoriasBase, obtenerCategoriasJerarquicas, obtenerCategoriasUsuario]);
 
+  console.log("categoriasUsuario: ", categoriasUsuario);
+
   // Handlers
   const handleCambiarVista = (vista) => {
     setVistaActual(vista);

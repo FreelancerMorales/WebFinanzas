@@ -66,16 +66,16 @@ export const useCuentas = () => {
   } = useApi(cuentasService.obtenerResumen);
 
   // Actualizar orden
-  const {
-    data: ordenActualizado,
-    loading: actualizandoOrden,
-    error: errorOrden,
-    execute: actualizarOrden,
-    reset: resetOrden
-  } = useApi(cuentasService.actualizarOrden, {
-    showSuccessAlert: true,
-    successMessage: 'Orden actualizado exitosamente'
-  });
+  // const {
+  //   data: ordenActualizado,
+  //   loading: actualizandoOrden,
+  //   error: errorOrden,
+  //   execute: actualizarOrden,
+  //   reset: resetOrden
+  // } = useApi(cuentasService.actualizarOrden, {
+  //   showSuccessAlert: true,
+  //   successMessage: 'Orden actualizado exitosamente'
+  // });
 
   return {
     // Crear
@@ -121,10 +121,10 @@ export const useCuentas = () => {
     resetResumen,
 
     // Orden
-    ordenActualizado,
-    actualizandoOrden,
-    errorOrden,
-    actualizarOrden,
-    resetOrden,
+    // ordenActualizado,
+    // actualizandoOrden,
+    // errorOrden,
+    // actualizarOrden,
+    // resetOrden,
   };
 };

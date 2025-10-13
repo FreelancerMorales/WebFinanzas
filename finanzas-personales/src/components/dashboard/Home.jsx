@@ -1,9 +1,20 @@
+import { useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useCuentas } from '../../hooks/useCuentas';
 
 import { FaChartPie, FaWallet, FaCalendarAlt, FaFilter } from 'react-icons/fa';
 
 const DashHome = () => {
   const { user } = useAuth();
+  const { cuentas, obtenerTodas } = useCuentas();
+
+  console.log(cuentas);
+  
+  useEffect(() => {
+  obtenerTodas({ activo: true }); // Con filtro
+  // o
+  obtenerTodas(); // Sin filtro
+}, []);
 
   return (
     <div className="container mx-auto p-4">
