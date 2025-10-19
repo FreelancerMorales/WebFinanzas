@@ -3,6 +3,7 @@ import { useTransacciones } from '../../hooks/useTransacciones';
 import { useCuentas } from '../../hooks/useCuentas';
 import { useCategorias } from '../../hooks/useCategorias';
 import { useTipoPago } from '../../hooks/useTipoPago';
+import { useEtiquetas } from '../../hooks/useEtiquetas';
 import { format, formatISO, parseISO } from 'date-fns';
 
 import { 
@@ -31,25 +32,24 @@ const Transacciones = () => {
   const { cuentas, obtenerTodas: obtenerTodasCuentas } = useCuentas();
   const { categoriasUsuario, obtenerCategoriasUsuario, tiposMovimiento, obtenerTiposMovimiento } = useCategorias();
   const { tiposPago, obtenerTiposPago } = useTipoPago();
+  const { etiquetas, obtenerTodas: obtenerTodasEtiquetas } = useEtiquetas();
 
   useEffect(() => {
     obtenerTodasCuentas({ activo: true }); // Con filtro
-    // o
-    obtenerTodasCuentas(); // Sin filtro
     obtenerTiposMovimiento();
     obtenerCategoriasUsuario();
     obtenerTiposPago();
+    obtenerTodasEtiquetas();
   }, []);
 
   const listaCuentas = cuentas?.datos || [];
   const listaTiposMovimiento = tiposMovimiento?.datos || [];
   const listaCategoriasUsuario = categoriasUsuario?.datos || [];
-  const listaTiposPago = tiposPago;
+  const listaTiposPago = tiposPago || [];
+  const listaEtiquetas = etiquetas?.datos || [];
 
-  console.log('listaCuentas', listaCuentas);
-  console.log('listaTiposMovimiento', listaTiposMovimiento);
-  console.log('listaCategoriasUsuario', listaCategoriasUsuario);
-  console.log('listaTiposPago', listaTiposPago);
+  console.log(listaEtiquetas);
+  
 
   const {
     // Datos
@@ -247,6 +247,7 @@ const Transacciones = () => {
       try {
         await agregarEtiquetas(transaccionId, etiquetasSeleccionadas);
         obtenerTodas(filtros); // Refrescar lista
+        obtenerPorId(transaccionId) //Refrescar Unidad
         setEtiquetasSeleccionadas([]);
       } catch (error) {
         console.error('Error al agregar etiquetas:', error);
@@ -258,6 +259,7 @@ const Transacciones = () => {
     try {
       await removerEtiquetas(transaccionId, etiquetaIds);
       obtenerTodas(filtros); // Refrescar lista
+      obtenerPorId(transaccionId); //Refrescar Unidad
     } catch (error) {
       console.error('Error al remover etiquetas:', error);
     }
@@ -1009,15 +1011,25 @@ const Transacciones = () => {
                     <div className="card-body p-4">
                       <h4 className="font-medium mb-3">Agregar Etiquetas</h4>
                       <div className="flex gap-2">
-                        <input
-                          type="text"
-                          className="input input-bordered flex-1"
-                          placeholder="IDs de etiquetas (separados por coma)"
+                        <select
+                          id="etiquetaId"
+                          name="etiquetaId"
+                          value={etiquetasSeleccionadas[0] || ''}
                           onChange={(e) => {
-                            const ids = e.target.value.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
-                            setEtiquetasSeleccionadas(ids);
+                            const id = parseInt(e.target.value) || '';
+                            setEtiquetasSeleccionadas(id ? [id] : []);
                           }}
-                        />
+                          className="select select-bordered w-full mt-2"
+                        >
+                          <option value="">-- Seleccione una etiqueta --</option>
+                          {listaEtiquetas.map((etiqueta) => (
+                            <option key={etiqueta.id} value={etiqueta.id}
+                            disabled={agregandoEtiquetas || removiendoEtiquetas}
+                            >
+                              {etiqueta.nombre} 
+                            </option>
+                          ))}
+                        </select>
                         <button 
                           className="btn btn-primary"
                           onClick={() => manejarAgregarEtiquetas(transaccion.datos.id)}

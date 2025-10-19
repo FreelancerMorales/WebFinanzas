@@ -12,6 +12,7 @@ import Landing from '../pages/Public/Landing';
 import LoginGoogle from '../pages/Public/Login';
 import Cuentas from '../pages/Private/Cuentas';
 import Categorias from '../pages/Private/Categorias';
+import Tags from '../pages/Private/Tags';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -37,6 +38,7 @@ const AppRouter = () => {
       <Route path="/login" element={<PublicRoute><LoginGoogle /></PublicRoute>} />
 
       <Route path="/home" element={<PrivateRoute><Home /></PrivateRoute>} />
+      <Route path="/tags" element={<PrivateRoute><Tags /></PrivateRoute>} />
       <Route path="/cuentas" element={<PrivateRoute><Cuentas /></PrivateRoute>} />
       <Route path="/categorias" element={<PrivateRoute><Categorias /></PrivateRoute>} />
       <Route path="/add" element={<PrivateRoute><Add /></PrivateRoute>} />

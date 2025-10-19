@@ -79,6 +79,8 @@ const Reportes = () => {
     resetTodosLosReportes
   } = useReportes();
 
+  console.log("Analisis de Etiquetas ", analisisEtiquetas);
+
   // Manejar cambio de período
   const handlePeriodoChange = (periodo) => {
     setPeriodoSeleccionado(periodo);
