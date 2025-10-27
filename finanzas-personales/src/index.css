@@ -1,5 +1,111 @@
 @import "tailwindcss";
 @plugin "daisyui";
+@plugin "daisyui/theme" {
+  name: "honeydark";
+  default: true;
+  prefersdark: true;
+  color-scheme: dark;
+
+  /* 🌑 BASE - Fondo profundo con matiz cálido */
+  --color-base-100: oklch(14% 0.02 250);   /* Fondo principal: casi negro con leve tinte azul-ámbar */
+  --color-base-200: oklch(18% 0.03 260);   /* Paneles: gris carbón con calidez */
+  --color-base-300: oklch(26% 0.04 270);   /* Tarjetas: gris oscuro neutro */
+  --color-base-content: oklch(92% 0.04 85); /* Texto claro de alto contraste */
+
+  /* 🍯 PRIMARY - Dorado vibrante con luz de miel */
+  --color-primary: oklch(78% 0.23 85);        /* Dorado brillante */
+  --color-primary-content: oklch(15% 0.03 75); /* Texto oscuro sobre dorado */
+
+  /* 🌻 SECONDARY - Ámbar con toque cobrizo */
+  --color-secondary: oklch(65% 0.28 70);       /* Naranja dorado intenso */
+  --color-secondary-content: oklch(14% 0.03 70);
+
+  /* ⚡ ACCENT - Brillo meloso moderno */
+  --color-accent: oklch(80% 0.26 95);          /* Amarillo claro con leve saturación */
+  --color-accent-content: oklch(18% 0.03 75);
+
+  /* 🪶 NEUTRAL - Para bordes y fondos sutiles */
+  --color-neutral: oklch(22% 0.03 250);        /* Gris oscuro con matiz frío */
+  --color-neutral-content: oklch(88% 0.03 85);
+
+  /* 💧 INFO - Azul zafiro moderno */
+  --color-info: oklch(70% 0.22 235);
+  --color-info-content: oklch(12% 0.02 235);
+
+  /* 🌿 SUCCESS - Verde lima meloso */
+  --color-success: oklch(65% 0.25 145);
+  --color-success-content: oklch(15% 0.03 145);
+
+  /* 🍊 WARNING - Ámbar tostado con brillo */
+  --color-warning: oklch(75% 0.30 75);
+  --color-warning-content: oklch(15% 0.03 75);
+
+  /* 🍎 ERROR - Rojo miel brillante */
+  --color-error: oklch(60% 0.35 30);
+  --color-error-content: oklch(96% 0.02 25);
+
+  /* ✨ Bordes, relieves y textura */
+  --radius-selector: 0.75rem;
+  --radius-field: 0.375rem;
+  --radius-box: 0.75rem;
+
+  --border: 1px;
+  --depth: 3;
+  --noise: 0.025;
+}
+
+@plugin "daisyui/theme" {
+  name: "honeylight";
+  default: false;
+  prefersdark: false;
+  color-scheme: light;
+
+  /* ☀️ BASE COLORS - Fondos cálidos, suaves y radiantes */
+  --color-base-100: oklch(98% 0.03 95);  /* Fondo crema claro */
+  --color-base-200: oklch(94% 0.04 90);  /* Paneles suaves */
+  --color-base-300: oklch(90% 0.05 85);  /* Tarjetas */
+  --color-base-content: oklch(28% 0.05 70); /* Texto principal oscuro */
+
+  /* 🍯 PRIMARY - Dorado miel brillante */
+  --color-primary: oklch(78% 0.22 85);        /* Dorado luminoso */
+  --color-primary-content: oklch(15% 0.02 70); /* Texto oscuro */
+
+  /* 🌻 SECONDARY - Polen claro */
+  --color-secondary: oklch(85% 0.18 90);      /* Amarillo cálido pastel */
+  --color-secondary-content: oklch(30% 0.05 75);
+
+  /* 🍋 ACCENT - Miel solar */
+  --color-accent: oklch(82% 0.25 95);
+  --color-accent-content: oklch(28% 0.05 80);
+
+  /* 🪶 NEUTRAL - Grises cálidos tipo panal */
+  --color-neutral: oklch(88% 0.05 80);
+  --color-neutral-content: oklch(30% 0.05 70);
+
+  /* 💧 INFO - Azul pastel limpio */
+  --color-info: oklch(72% 0.20 230);
+  --color-info-content: oklch(25% 0.04 230);
+
+  /* 🌿 SUCCESS - Verde natural brillante */
+  --color-success: oklch(68% 0.25 150);
+  --color-success-content: oklch(22% 0.05 140);
+
+  /* 🍊 WARNING - Ámbar cálido */
+  --color-warning: oklch(78% 0.28 80);
+  --color-warning-content: oklch(32% 0.06 80);
+
+  /* 🍎 ERROR - Rojo meloso más intenso */
+  --color-error: oklch(65% 0.32 25);
+  --color-error-content: oklch(98% 0.02 25);
+
+  /* ✨ Detalles visuales */
+  --radius-selector: 0.75rem;
+  --radius-field: 0.375rem;
+  --radius-box: 0.75rem;
+  --border: 1px;
+  --depth: 2;
+  --noise: 0.015;
+}
 
 .hexagon {
   clip-path: polygon(
@@ -11,3 +117,12 @@
     7% 25%
   );
 }
+
+.btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+}
+
+/* .btn-primary {
+  box-shadow: 0 0 15px rgba(255, 200, 60, 0.25);
+} */
