@@ -160,13 +160,13 @@ const Categorias = () => {
             <FaList className="mr-2" />
             Categorías Base ({categoriasBase.datos.length})
           </h3>
-          <ul className="card bg-base-200 rounded-box ">
+          <ul className="card bg-base-200 rounded-box p-4 py-8 w-full h-full lg:flex-row md:flex-wrap justify-around justify-items-center gap-4 border border-base-300">
             {categoriasBase.datos.map((cat) => (
-              <li key={cat.id} className="mb-4 border-l-2" style={{ borderColor: cat.color?.hex || 'white' }}>
+              <li key={cat.id} className="mb-4 border-l-2 content-center" style={{ borderColor: cat.color?.hex || 'white' }}>
                 <div className="flex flex-col items-start pl-4">
                   <div className="flex items-center gap-2">
                     <strong>{cat.nombre}</strong>
-                    {cat.icon && <span className="text-lg">{cat.icono.codigo}</span>}
+                    <span className={`text-lg text-amber-400 ${cat.icono.codigo}`}></span>
                     <span className={`badge ${cat.tipomovimiento?.id == 1 || cat.tipomovimiento?.id == 3 ? 'badge-success' : 'badge-error' }`}>{cat.tipomovimiento?.nombre}</span>
                     <span className="badge badge-ghost">Nivel: {cat.nivel}</span>
                   </div>
@@ -179,7 +179,7 @@ const Categorias = () => {
                         <li key={sub.id}>
                           <div className="flex items-center gap-2">
                             {sub.nombre}
-                            {sub.icono && <span className="text-lg">{sub.icono.codigo}</span>}
+                            <span className={`text-lg text-amber-400 ${cat.icono.codigo}`}></span>
                           </div>
                         </li>
                       ))}
@@ -396,7 +396,8 @@ const Categorias = () => {
                 <option value="">Seleccionar categoría</option>
                 {categoriasBase?.datos?.map((cat) => (
                   <option key={cat.id} value={cat.id}>
-                    {cat.icono?.codigo} {cat.nombre}
+                    <span className={`text-lg text-amber-400 ${cat.icono.codigo}`}> </span> {cat.nombre}
+                    {console.log(`icono: ${cat.icono.codigo}`)}
                   </option>
                 ))}
               </select>
