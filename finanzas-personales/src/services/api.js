@@ -27,16 +27,31 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    const errorMessage = error.response?.data?.error?.mensaje || 
-                        error.response?.data?.message || 
-                        'Error de conexión';
+    // 🔥 DETECTA errores de conexión específicamente
+    if (error.code === 'ECONNREFUSED' || error.code === 'ERR_NETWORK') {
+      console.error('❌ No se puede conectar al servidor');
+      console.error(`   Verifica que esté corriendo en ${API_BASE_URL}`);
+      
+      return Promise.reject({
+        message: '🔌 No se puede conectar al servidor. Verifica:\n' +
+                 '1. Que el backend esté corriendo\n' +
+                 '2. Que la IP sea correcta\n' +
+                 `3. URL actual: ${API_BASE_URL}`,
+        status: 0,
+        tipo: 'CONEXION'
+      });
+    }
     
-    // Si el token expiró, redirigir al login
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
     }
+    
+    const errorMessage = error.response?.data?.error?.mensaje || 
+                        error.response?.data?.message || 
+                        error.message || 
+                        'Error desconocido';
     
     return Promise.reject({
       message: errorMessage,
